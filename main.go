@@ -12,7 +12,8 @@ import (
 	"github.com/steadybit/extension-kit/exthealth"
 	"github.com/steadybit/extension-kit/exthttp"
 	"github.com/steadybit/extension-kit/extlogging"
-	"github.com/steadybit/extension-scaffold/config"
+	"github.com/steadybit/extension-stackstate/config"
+	"github.com/steadybit/extension-stackstate/extservice"
 )
 
 func main() {
@@ -28,7 +29,7 @@ func main() {
 
 	exthttp.RegisterHttpHandler("/", exthttp.GetterAsHandler(getExtensionList))
 
-	//extrobots.RegisterDiscoveryHandlers()
+	extservice.RegisterServiceDiscoveryHandlers()
 	//action_kit_sdk.RegisterAction(extrobots.NewLogAction())
 
 	action_kit_sdk.InstallSignalHandler()
@@ -49,7 +50,7 @@ type ExtensionListResponse struct {
 
 func getExtensionList() ExtensionListResponse {
 	return ExtensionListResponse{
-		ActionList: action_kit_sdk.GetActionList(),
-		//DiscoveryList: extrobots.GetDiscoveryList(),
+		ActionList:    action_kit_sdk.GetActionList(),
+		DiscoveryList: extservice.GetDiscoveryList(),
 	}
 }

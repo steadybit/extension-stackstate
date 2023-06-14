@@ -10,7 +10,7 @@ Learn about the capabilities of this extension in our [Reliability Hub](https://
 
 | Environment Variable               | Helm value              | Meaning                                                                      | Required | Default |
 |------------------------------------|-------------------------|------------------------------------------------------------------------------|----------|---------|
-| `STEADYBIT_EXTENSION_API_KEY`      | `stackstate.apiKey`     | Stack State API Key                                                          | yes      |         |
+| `STEADYBIT_EXTENSION_API_TOKEN`    | `stackstate.apiToken`   | Stack State API Token                                                        | yes      |         |
 | `STEADYBIT_EXTENSION_API_BASE_URL` | `stackstate.apiBaseUrl` | Stack State API Base URL (example: https://steadybit.app.stackstate.io/api/) | yes      |         |
 
 
