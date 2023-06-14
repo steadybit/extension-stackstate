@@ -8,10 +8,10 @@ Learn about the capabilities of this extension in our [Reliability Hub](https://
 
 ## Configuration
 
-| Environment Variable               | Helm value              | Meaning                                                                      | Required | Default |
-|------------------------------------|-------------------------|------------------------------------------------------------------------------|----------|---------|
-| `STEADYBIT_EXTENSION_API_TOKEN`    | `stackstate.apiToken`   | Stack State API Token                                                        | yes      |         |
-| `STEADYBIT_EXTENSION_API_BASE_URL` | `stackstate.apiBaseUrl` | Stack State API Base URL (example: https://steadybit.app.stackstate.io/api/) | yes      |         |
+| Environment Variable               | Helm value              | Meaning                                                                       | Required | Default |
+|------------------------------------|-------------------------|-------------------------------------------------------------------------------|----------|---------|
+| `STEADYBIT_EXTENSION_API_TOKEN`    | `stackstate.apiToken`   | Stack State API Token                                                         | yes      |         |
+| `STEADYBIT_EXTENSION_API_BASE_URL` | `stackstate.apiBaseUrl` | Stack State API Base URL (example: https://yourcompany.app.stackstate.io/api) | yes      |         |
 
 
 The extension supports all environment variables provided by [steadybit/extension-kit](https://github.com/steadybit/extension-kit#environment-variables).
