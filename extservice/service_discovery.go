@@ -168,7 +168,7 @@ func GetAllServices(ctx context.Context, client *resty.Client) []discovery_kit_a
 
 	if res.StatusCode() != 200 {
 		log.Error().Msgf("StackState API responded with unexpected status code %d while retrieving service states. Full response: %v",
-			res.StatusCode,
+			res.StatusCode(),
 			res.String())
 		return result
 	}
