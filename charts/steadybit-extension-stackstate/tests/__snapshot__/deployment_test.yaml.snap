@@ -4,17 +4,17 @@ manifest should match snapshot with TLS:
     kind: Deployment
     metadata:
       labels: null
-      name: RELEASE-NAME-steadybit-extension-scaffold
+      name: RELEASE-NAME-steadybit-extension-stackstate
       namespace: NAMESPACE
     spec:
       replicas: 1
       selector:
         matchLabels:
-          app.kubernetes.io/name: steadybit-extension-scaffold
+          app.kubernetes.io/name: steadybit-extension-stackstate
       template:
         metadata:
           labels:
-            app.kubernetes.io/name: steadybit-extension-scaffold
+            app.kubernetes.io/name: steadybit-extension-stackstate
         spec:
           containers:
             - env:
@@ -26,17 +26,17 @@ manifest should match snapshot with TLS:
                   value: /etc/extension/certificates/server-cert/tls.crt
                 - name: STEADYBIT_EXTENSION_TLS_SERVER_KEY
                   value: /etc/extension/certificates/server-cert/tls.key
-              image: ghcr.io/steadybit/extension-scaffold:latest
+              image: ghcr.io/steadybit/extension-stackstate:latest
               imagePullPolicy: Always
               livenessProbe:
                 httpGet:
                   path: /health/liveness
-                  port: 8081
+                  port: 8084
               name: extension
               readinessProbe:
                 httpGet:
                   path: /health/readiness
-                  port: 8081
+                  port: 8084
               resources:
                 limits:
                   cpu: 200m
@@ -64,17 +64,17 @@ manifest should match snapshot with extra env vars:
     kind: Deployment
     metadata:
       labels: null
-      name: RELEASE-NAME-steadybit-extension-scaffold
+      name: RELEASE-NAME-steadybit-extension-stackstate
       namespace: NAMESPACE
     spec:
       replicas: 1
       selector:
         matchLabels:
-          app.kubernetes.io/name: steadybit-extension-scaffold
+          app.kubernetes.io/name: steadybit-extension-stackstate
       template:
         metadata:
           labels:
-            app.kubernetes.io/name: steadybit-extension-scaffold
+            app.kubernetes.io/name: steadybit-extension-stackstate
         spec:
           containers:
             - env:
@@ -89,17 +89,17 @@ manifest should match snapshot with extra env vars:
                   name: env-configmap
                 - name: env-secrets
                   secretRef: null
-              image: ghcr.io/steadybit/extension-scaffold:latest
+              image: ghcr.io/steadybit/extension-stackstate:latest
               imagePullPolicy: Always
               livenessProbe:
                 httpGet:
                   path: /health/liveness
-                  port: 8081
+                  port: 8084
               name: extension
               readinessProbe:
                 httpGet:
                   path: /health/readiness
-                  port: 8081
+                  port: 8084
               resources:
                 limits:
                   cpu: 200m
@@ -120,17 +120,17 @@ manifest should match snapshot with mutual TLS:
     kind: Deployment
     metadata:
       labels: null
-      name: RELEASE-NAME-steadybit-extension-scaffold
+      name: RELEASE-NAME-steadybit-extension-stackstate
       namespace: NAMESPACE
     spec:
       replicas: 1
       selector:
         matchLabels:
-          app.kubernetes.io/name: steadybit-extension-scaffold
+          app.kubernetes.io/name: steadybit-extension-stackstate
       template:
         metadata:
           labels:
-            app.kubernetes.io/name: steadybit-extension-scaffold
+            app.kubernetes.io/name: steadybit-extension-stackstate
         spec:
           containers:
             - env:
@@ -144,17 +144,17 @@ manifest should match snapshot with mutual TLS:
                   value: /etc/extension/certificates/server-cert/tls.key
                 - name: STEADYBIT_EXTENSION_TLS_CLIENT_CAS
                   value: /etc/extension/certificates/client-cert-a/tls.crt,/etc/extension/certificates/client-cert-a/tls.crt
-              image: ghcr.io/steadybit/extension-scaffold:latest
+              image: ghcr.io/steadybit/extension-stackstate:latest
               imagePullPolicy: Always
               livenessProbe:
                 httpGet:
                   path: /health/liveness
-                  port: 8081
+                  port: 8084
               name: extension
               readinessProbe:
                 httpGet:
                   path: /health/readiness
-                  port: 8081
+                  port: 8084
               resources:
                 limits:
                   cpu: 200m
@@ -189,17 +189,17 @@ manifest should match snapshot without TLS:
     kind: Deployment
     metadata:
       labels: null
-      name: RELEASE-NAME-steadybit-extension-scaffold
+      name: RELEASE-NAME-steadybit-extension-stackstate
       namespace: NAMESPACE
     spec:
       replicas: 1
       selector:
         matchLabels:
-          app.kubernetes.io/name: steadybit-extension-scaffold
+          app.kubernetes.io/name: steadybit-extension-stackstate
       template:
         metadata:
           labels:
-            app.kubernetes.io/name: steadybit-extension-scaffold
+            app.kubernetes.io/name: steadybit-extension-stackstate
         spec:
           containers:
             - env:
@@ -207,17 +207,17 @@ manifest should match snapshot without TLS:
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
                   value: text
-              image: ghcr.io/steadybit/extension-scaffold:latest
+              image: ghcr.io/steadybit/extension-stackstate:latest
               imagePullPolicy: Always
               livenessProbe:
                 httpGet:
                   path: /health/liveness
-                  port: 8081
+                  port: 8084
               name: extension
               readinessProbe:
                 httpGet:
                   path: /health/readiness
-                  port: 8081
+                  port: 8084
               resources:
                 limits:
                   cpu: 200m

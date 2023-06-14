@@ -42,11 +42,11 @@ spec:
           livenessProbe:
             httpGet:
               path: /health/liveness
-              port: 8081
+              port: 8084
           readinessProbe:
             httpGet:
               path: /health/readiness
-              port: 8081
+              port: 8084
           securityContext:
             readOnlyRootFilesystem: true
             runAsNonRoot: true

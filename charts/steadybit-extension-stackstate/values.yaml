@@ -2,10 +2,10 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 image:
-  # image.name -- The container image to use for the Steadybit scaffold extension.
-  name: ghcr.io/steadybit/extension-scaffold
-  # image.tag -- tag name of the extension-scaffold container image to use.
-  # See https://github.com/steadybit/extension-scaffold/pkgs/container/extension-scaffold/versions for all tags.
+  # image.name -- The container image to use for the Steadybit stackstate extension.
+  name: ghcr.io/steadybit/extension-stackstate
+  # image.tag -- tag name of the extension-stackstate container image to use.
+  # See https://github.com/steadybit/extension-stackstate/pkgs/container/extension-stackstate/versions for all tags.
   tag: latest
   # image.pullPolicy -- Specifies when to pull the image container.
   pullPolicy: Always
