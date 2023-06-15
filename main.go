@@ -5,6 +5,7 @@
 package main
 
 import (
+	"github.com/go-resty/resty/v2"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
@@ -26,11 +27,12 @@ func main() {
 
 	config.ParseConfiguration()
 	config.ValidateConfiguration()
+	initRestyClient()
 
 	exthttp.RegisterHttpHandler("/", exthttp.GetterAsHandler(getExtensionList))
 
 	extservice.RegisterServiceDiscoveryHandlers()
-	//action_kit_sdk.RegisterAction(extrobots.NewLogAction())
+	action_kit_sdk.RegisterAction(extservice.NewServiceStatusCheckAction())
 
 	action_kit_sdk.InstallSignalHandler()
 
@@ -41,6 +43,13 @@ func main() {
 	exthttp.Listen(exthttp.ListenOpts{
 		Port: 8083,
 	})
+}
+
+func initRestyClient() {
+	extservice.RestyClient = resty.New()
+	extservice.RestyClient.SetBaseURL(config.Config.ApiBaseUrl)
+	extservice.RestyClient.SetHeader("X-API-TOKEN", config.Config.ApiToken)
+	extservice.RestyClient.SetHeader("Content-Type", "application/json")
 }
 
 type ExtensionListResponse struct {

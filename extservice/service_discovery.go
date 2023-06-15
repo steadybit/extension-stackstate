@@ -12,7 +12,6 @@ import (
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/exthttp"
 	"github.com/steadybit/extension-kit/extutil"
-	"github.com/steadybit/extension-stackstate/config"
 	"net/http"
 	"strconv"
 )
@@ -62,7 +61,7 @@ func getServiceDiscoveryDescription() discovery_kit_api.DiscoveryDescription {
 func getServiceTargetDescription() discovery_kit_api.TargetDescription {
 	return discovery_kit_api.TargetDescription{
 		Id:       serviceTargetType,
-		Label:    discovery_kit_api.PluralLabel{One: "StackState service state", Other: "StackState service states"},
+		Label:    discovery_kit_api.PluralLabel{One: "StackState service", Other: "StackState service"},
 		Category: extutil.Ptr("monitoring"),
 		Version:  extbuild.GetSemverVersionStringOrUnknown(),
 		Icon:     extutil.Ptr(serviceIcon),
@@ -88,8 +87,8 @@ func getServiceAttributeDescriptions() discovery_kit_api.AttributeDescriptions {
 			{
 				Attribute: "stackstate.service",
 				Label: discovery_kit_api.PluralLabel{
-					One:   "StackState service state",
-					Other: "StackState service states",
+					One:   "Service",
+					Other: "Services",
 				},
 			}, {
 				Attribute: "stackstate.namespace",
@@ -108,32 +107,8 @@ func getServiceAttributeDescriptions() discovery_kit_api.AttributeDescriptions {
 	}
 }
 
-var restyClient *resty.Client
-
-type ViewSnapshotResponseWrapper struct {
-	ViewSnapshotResponse ViewSnapshotResponse `json:"viewSnapshotResponse"`
-}
-type ViewSnapshotResponse struct {
-	Components []Component `json:"components"`
-}
-type Component struct {
-	Id         int        `json:"id"`
-	Name       string     `json:"name"`
-	Properties Properties `json:"properties"`
-}
-type Properties struct {
-	NamespaceIdentifier   string `json:"namespaceIdentifier"`
-	ClusterNameIdentifier string `json:"clusterNameIdentifier"`
-}
-
 func getServiceDiscoveryResults(w http.ResponseWriter, r *http.Request, _ []byte) {
-	if restyClient == nil {
-		restyClient = resty.New()
-		restyClient.SetBaseURL(config.Config.ApiBaseUrl)
-		restyClient.SetHeader("X-API-TOKEN", config.Config.ApiToken)
-		restyClient.SetHeader("Content-Type", "application/json")
-	}
-	exthttp.WriteBody(w, discovery_kit_api.DiscoveredTargets{Targets: GetAllServices(r.Context(), restyClient)})
+	exthttp.WriteBody(w, discovery_kit_api.DiscoveredTargets{Targets: GetAllServices(r.Context(), RestyClient)})
 }
 
 func GetAllServices(ctx context.Context, client *resty.Client) []discovery_kit_api.Target {
