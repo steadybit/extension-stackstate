@@ -61,7 +61,7 @@ func getServiceDiscoveryDescription() discovery_kit_api.DiscoveryDescription {
 func getServiceTargetDescription() discovery_kit_api.TargetDescription {
 	return discovery_kit_api.TargetDescription{
 		Id:       serviceTargetType,
-		Label:    discovery_kit_api.PluralLabel{One: "StackState service", Other: "StackState service"},
+		Label:    discovery_kit_api.PluralLabel{One: "StackState service", Other: "StackState services"},
 		Category: extutil.Ptr("monitoring"),
 		Version:  extbuild.GetSemverVersionStringOrUnknown(),
 		Icon:     extutil.Ptr(serviceIcon),

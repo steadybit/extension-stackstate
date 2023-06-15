@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-resty/resty/v2"
+	"github.com/rs/zerolog/log"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	extension_kit "github.com/steadybit/extension-kit"
@@ -28,6 +29,8 @@ var (
 
 type ServiceStatusCheckState struct {
 	ServiceId      string
+	ServiceName    string
+	ClusterName    string
 	End            time.Time
 	ExpectedStatus string
 }
@@ -145,6 +148,8 @@ func (m *ServiceStatusCheckAction) Prepare(_ context.Context, state *ServiceStat
 	}
 
 	state.ServiceId = serviceId[0]
+	state.ServiceName = request.Target.Attributes["stackstate.service"][0]
+	state.ClusterName = request.Target.Attributes["stackstate.cluster-name"][0]
 	state.End = end
 	state.ExpectedStatus = expectedStatus
 
@@ -190,14 +195,30 @@ func MonitorStatusCheckStatus(ctx context.Context, state *ServiceStatusCheckStat
 		return nil, extutil.Ptr(extension_kit.ToError(fmt.Sprintf("Failed to retrieve service states from Stack State for Service ID %s. Full response: %v", state.ServiceId, res.String()), err))
 	}
 
+	var component Component
 	if res.StatusCode() != 200 {
-		return nil, extutil.Ptr(extension_kit.ToError(fmt.Sprintf("StackState API responded with unexpected status code %d while retrieving service states for Service ID %s. Full response: %v",
-			res.StatusCode(),
-			state.ServiceId,
-			res.String()), err))
+		//TODO: Temporarily return some dummy data until the periodic HTTP 500 problem is solved
+		log.Err(err).Msgf("StackState API responded with unexpected status code %d while retrieving service states for Service ID %s. Full response: %v", res.StatusCode(), state.ServiceId, res.String())
+		//return nil, extutil.Ptr(extension_kit.ToError(fmt.Sprintf("StackState API responded with unexpected status code %d while retrieving service states for Service ID %s. Full response: %v",
+		//	res.StatusCode(),
+		//	state.ServiceId,
+		//	res.String()), err))
+		serviceIdInt, parseErr := strconv.Atoi(state.ServiceId)
+		if parseErr != nil {
+			return nil, extutil.Ptr(extension_kit.ToError(fmt.Sprintf("Failed to parse int %s", state.ServiceId), parseErr))
+		}
+		component = Component{
+			Id:   serviceIdInt,
+			Name: state.ServiceName,
+			State: State{
+				HealthState: "UNKNOWN",
+			},
+			Identifiers: []string{fmt.Sprintf("urn:service:/%s:%s:%s", state.ClusterName, state.ServiceName, state.ServiceId)},
+		}
+	} else {
+		component = stackStateResponse.ViewSnapshotResponse.Components[0]
 	}
 
-	component := stackStateResponse.ViewSnapshotResponse.Components[0]
 	completed := now.After(state.End)
 	var checkError *action_kit_api.ActionKitError
 	if len(state.ExpectedStatus) > 0 && component.State.HealthState != state.ExpectedStatus {
@@ -240,13 +261,13 @@ func toMetric(service *Component, now time.Time) *action_kit_api.Metric {
 	uiBaseUrl := config.Config.ApiBaseUrl[:(len(config.Config.ApiBaseUrl) - 3)]
 
 	return extutil.Ptr(action_kit_api.Metric{
-		Name: extutil.Ptr("datadog_monitor_status"),
+		Name: extutil.Ptr("stackstate_service_status"),
 		Metric: map[string]string{
-			"stackstate.service.id":   strconv.Itoa(service.Id),
-			"stackstate.service.name": service.Name,
-			"state":                   state,
-			"tooltip":                 tooltip,
-			"url":                     fmt.Sprintf("%s/#/components//%s", uiBaseUrl, url.QueryEscape(service.Identifiers[0])),
+			"stackstate.service.id": strconv.Itoa(service.Id),
+			"stackstate.service":    service.Name,
+			"state":                 state,
+			"tooltip":               tooltip,
+			"url":                   fmt.Sprintf("%s/#/components/%s", uiBaseUrl, url.QueryEscape(service.Identifiers[0])),
 		},
 		Timestamp: now,
 		Value:     0,
