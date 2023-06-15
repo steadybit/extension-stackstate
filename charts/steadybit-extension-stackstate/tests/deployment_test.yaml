@@ -37,3 +37,17 @@ tests:
           name: env-secrets
     asserts:
       - matchSnapshot: {}
+  - it: manifest should match snapshot with env vars
+    set:
+      stackstate:
+        apiBaseUrl: "https://stackstate.example.com"
+        apiToken: "123"
+    asserts:
+      - matchSnapshot: {}
+  - it: manifest should match snapshot with existing secret
+    set:
+      stackstate:
+        apiBaseUrl: "https://stackstate.example.com"
+        existingSecret: "secret-stackstate-existing"
+    asserts:
+      - matchSnapshot: {}
