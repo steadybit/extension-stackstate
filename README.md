@@ -6,12 +6,19 @@ A [Steadybit](https://www.steadybit.com/) extension to integrate [Stack State](h
 
 Learn about the capabilities of this extension in our [Reliability Hub](https://hub.steadybit.com/extension/com.github.steadybit.extension_stackstate).
 
+## Prerequisites
+
+You need to have a StackState service token. The following steps describe how to create one:
+- Install the StackState CLI: https://<your-company>.app.stackstate.io/#/cli
+- Run `sts service-token create --name steadybit-integration --roles stackstate-k8s-troubleshooter`
+
+
 ## Configuration
 
-| Environment Variable               | Helm value              | Meaning                                                                       | Required | Default |
-|------------------------------------|-------------------------|-------------------------------------------------------------------------------|----------|---------|
-| `STEADYBIT_EXTENSION_API_TOKEN`    | `stackstate.apiToken`   | Stack State API Token                                                         | yes      |         |
-| `STEADYBIT_EXTENSION_API_BASE_URL` | `stackstate.apiBaseUrl` | Stack State API Base URL (example: https://yourcompany.app.stackstate.io/api) | yes      |         |
+| Environment Variable                | Helm value                | Meaning                                                                       | Required | Default |
+|-------------------------------------|---------------------------|-------------------------------------------------------------------------------|----------|---------|
+| `STEADYBIT_EXTENSION_SERVICE_TOKEN` | `stackstate.serviceToken` | Stack State Service Token                                                     | yes      |         |
+| `STEADYBIT_EXTENSION_API_BASE_URL`  | `stackstate.apiBaseUrl`   | Stack State API Base URL (example: https://yourcompany.app.stackstate.io/api) | yes      |         |
 
 
 The extension supports all environment variables provided by [steadybit/extension-kit](https://github.com/steadybit/extension-kit#environment-variables).
@@ -25,6 +32,8 @@ $ docker run \
   --rm \
   -p 8080 \
   --name steadybit-extension-stackstate \
+  --env STEADYBIT_EXTENSION_SERVICE_TOKEN="{{SERVICE_TOKEN}}" \
+  --env STEADYBIT_EXTENSION_API_BASE_URL="{{API_BASE_URL}}" \
   ghcr.io/steadybit/extension-stackstate:latest
 ```
 
@@ -39,6 +48,8 @@ $ helm upgrade steadybit-extension-stackstate \
     --timeout 5m0s \
     --create-namespace \
     --namespace steadybit-extension \
+    --set stackstate.serviceToken="{{SERVICE_TOKEN}}" \
+    --set stackstate.apiBaseUrl="{{API_BASE_URL}}" \
     steadybit-extension-stackstate/steadybit-extension-stackstate
 ```
 

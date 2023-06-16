@@ -3,8 +3,8 @@
 # Declare variables to be passed into your templates.
 
 stackstate:
-  # stackstate.apiToken -- The API Token used to access the StackState API.
-  apiToken: ""
+  # stackstate.serviceToken -- The Service Token used to access the StackState API.
+  serviceToken: ""
   # stackstate.apiBaseUrl -- The base url for StackState API Calls, for example `https://yourcompany.app.stackstate.io/api`
   apiBaseUrl: ""
   # stackstate.existingSecret -- If defined, will skip secret creation and instead assume that the referenced secret contains the keys api-token.

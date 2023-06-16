@@ -26,10 +26,10 @@ manifest should match snapshot with TLS:
                   value: /etc/extension/certificates/server-cert/tls.crt
                 - name: STEADYBIT_EXTENSION_TLS_SERVER_KEY
                   value: /etc/extension/certificates/server-cert/tls.key
-                - name: STEADYBIT_EXTENSION_API_TOKEN
+                - name: STEADYBIT_EXTENSION_SERVICE_TOKEN
                   valueFrom:
                     secretKeyRef:
-                      key: api-token
+                      key: service-token
                       name: steadybit-extension-stackstate
                 - name: STEADYBIT_EXTENSION_API_BASE_URL
                   value: null
@@ -89,10 +89,10 @@ manifest should match snapshot with env vars:
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
                   value: text
-                - name: STEADYBIT_EXTENSION_API_TOKEN
+                - name: STEADYBIT_EXTENSION_SERVICE_TOKEN
                   valueFrom:
                     secretKeyRef:
-                      key: api-token
+                      key: service-token
                       name: steadybit-extension-stackstate
                 - name: STEADYBIT_EXTENSION_API_BASE_URL
                   value: https://stackstate.example.com
@@ -145,10 +145,10 @@ manifest should match snapshot with existing secret:
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
                   value: text
-                - name: STEADYBIT_EXTENSION_API_TOKEN
+                - name: STEADYBIT_EXTENSION_SERVICE_TOKEN
                   valueFrom:
                     secretKeyRef:
-                      key: api-token
+                      key: service-token
                       name: secret-stackstate-existing
                 - name: STEADYBIT_EXTENSION_API_BASE_URL
                   value: https://stackstate.example.com
@@ -201,10 +201,10 @@ manifest should match snapshot with extra env vars:
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
                   value: text
-                - name: STEADYBIT_EXTENSION_API_TOKEN
+                - name: STEADYBIT_EXTENSION_SERVICE_TOKEN
                   valueFrom:
                     secretKeyRef:
-                      key: api-token
+                      key: service-token
                       name: steadybit-extension-stackstate
                 - name: STEADYBIT_EXTENSION_API_BASE_URL
                   value: null
@@ -270,10 +270,10 @@ manifest should match snapshot with mutual TLS:
                   value: /etc/extension/certificates/server-cert/tls.key
                 - name: STEADYBIT_EXTENSION_TLS_CLIENT_CAS
                   value: /etc/extension/certificates/client-cert-a/tls.crt,/etc/extension/certificates/client-cert-a/tls.crt
-                - name: STEADYBIT_EXTENSION_API_TOKEN
+                - name: STEADYBIT_EXTENSION_SERVICE_TOKEN
                   valueFrom:
                     secretKeyRef:
-                      key: api-token
+                      key: service-token
                       name: steadybit-extension-stackstate
                 - name: STEADYBIT_EXTENSION_API_BASE_URL
                   value: null
@@ -340,10 +340,10 @@ manifest should match snapshot without TLS:
                   value: INFO
                 - name: STEADYBIT_LOG_FORMAT
                   value: text
-                - name: STEADYBIT_EXTENSION_API_TOKEN
+                - name: STEADYBIT_EXTENSION_SERVICE_TOKEN
                   valueFrom:
                     secretKeyRef:
-                      key: api-token
+                      key: service-token
                       name: steadybit-extension-stackstate
                 - name: STEADYBIT_EXTENSION_API_BASE_URL
                   value: null

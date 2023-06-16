@@ -41,7 +41,7 @@ tests:
     set:
       stackstate:
         apiBaseUrl: "https://stackstate.example.com"
-        apiToken: "123"
+        serviceToken: "123"
     asserts:
       - matchSnapshot: {}
   - it: manifest should match snapshot with existing secret

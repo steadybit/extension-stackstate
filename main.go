@@ -48,7 +48,7 @@ func main() {
 func initRestyClient() {
 	extservice.RestyClient = resty.New()
 	extservice.RestyClient.SetBaseURL(config.Config.ApiBaseUrl)
-	extservice.RestyClient.SetHeader("X-API-TOKEN", config.Config.ApiToken)
+	extservice.RestyClient.SetHeader("X-SERVICE-TOKEN", config.Config.ServiceToken)
 	extservice.RestyClient.SetHeader("Content-Type", "application/json")
 }
 
