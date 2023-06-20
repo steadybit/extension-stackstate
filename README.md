@@ -28,7 +28,7 @@ The extension supports all environment variables provided by [steadybit/extensio
 ### Using Docker
 
 ```sh
-$ docker run \
+docker run \
   --rm \
   -p 8080 \
   --name steadybit-extension-stackstate \
@@ -40,9 +40,9 @@ $ docker run \
 ### Using Helm in Kubernetes
 
 ```sh
-$ helm repo add steadybit-extension-stackstate https://steadybit.github.io/extension-stackstate
-$ helm repo update
-$ helm upgrade steadybit-extension-stackstate \
+helm repo add steadybit-extension-stackstate https://steadybit.github.io/extension-stackstate
+helm repo update
+helm upgrade steadybit-extension-stackstate \
     --install \
     --wait \
     --timeout 5m0s \
