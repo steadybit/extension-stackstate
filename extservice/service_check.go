@@ -128,7 +128,7 @@ func (m *ServiceStatusCheckAction) Describe() action_kit_api.ActionDescription {
 		Prepare: action_kit_api.MutatingEndpointReference{},
 		Start:   action_kit_api.MutatingEndpointReference{},
 		Status: extutil.Ptr(action_kit_api.MutatingEndpointReferenceWithCallInterval{
-			CallInterval: extutil.Ptr("5s"),
+			CallInterval: extutil.Ptr("1s"),
 		}),
 	}
 }
@@ -197,12 +197,7 @@ func MonitorStatusCheckStatus(ctx context.Context, state *ServiceStatusCheckStat
 
 	var component Component
 	if res.StatusCode() != 200 {
-		//TODO: Temporarily return some dummy data until the periodic HTTP 500 problem is solved
 		log.Err(err).Msgf("StackState API responded with unexpected status code %d while retrieving service states for Service ID %s. Full response: %v", res.StatusCode(), state.ServiceId, res.String())
-		//return nil, extutil.Ptr(extension_kit.ToError(fmt.Sprintf("StackState API responded with unexpected status code %d while retrieving service states for Service ID %s. Full response: %v",
-		//	res.StatusCode(),
-		//	state.ServiceId,
-		//	res.String()), err))
 		serviceIdInt, parseErr := strconv.Atoi(state.ServiceId)
 		if parseErr != nil {
 			return nil, extutil.Ptr(extension_kit.ToError(fmt.Sprintf("Failed to parse int %s", state.ServiceId), parseErr))
