@@ -9,11 +9,13 @@ import (
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
+	"github.com/steadybit/event-kit/go/event_kit_api"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/exthealth"
 	"github.com/steadybit/extension-kit/exthttp"
 	"github.com/steadybit/extension-kit/extlogging"
-	"github.com/steadybit/extension-stackstate/config"
+  "github.com/steadybit/extension-kit/extutil"
+  "github.com/steadybit/extension-stackstate/config"
 	"github.com/steadybit/extension-stackstate/extservice"
 )
 
@@ -55,11 +57,28 @@ func initRestyClient() {
 type ExtensionListResponse struct {
 	action_kit_api.ActionList       `json:",inline"`
 	discovery_kit_api.DiscoveryList `json:",inline"`
+	event_kit_api.EventListenerList `json:",inline"`
 }
 
 func getExtensionList() ExtensionListResponse {
 	return ExtensionListResponse{
 		ActionList:    action_kit_sdk.GetActionList(),
 		DiscoveryList: extservice.GetDiscoveryList(),
-	}
+    EventListenerList: event_kit_api.EventListenerList{
+      EventListeners: []event_kit_api.EventListener{
+        {
+          Method:   "POST",
+          Path:     "/events/experiment-started",
+          ListenTo: []string{"experiment.execution.created"},
+
+          RestrictTo: extutil.Ptr(event_kit_api.Leader),
+        },
+        {
+          Method:     "POST",
+          Path:       "/events/experiment-completed",
+          ListenTo:   []string{"experiment.execution.completed", "experiment.execution.failed", "experiment.execution.canceled", "experiment.execution.errored"},
+          RestrictTo: extutil.Ptr(event_kit_api.Leader),
+        },
+      },
+    },}
 }
