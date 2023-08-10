@@ -65,7 +65,7 @@ manifest should match snapshot with TLS:
     kind: Deployment
     metadata:
       labels:
-        steadybit.com/discovery-enabled: "false"
+        steadybit.com/discovery-disabled: "true"
       name: RELEASE-NAME-steadybit-extension-stackstate
       namespace: NAMESPACE
     spec:
@@ -135,7 +135,7 @@ manifest should match snapshot with env vars:
     kind: Deployment
     metadata:
       labels:
-        steadybit.com/discovery-enabled: "false"
+        steadybit.com/discovery-disabled: "true"
       name: RELEASE-NAME-steadybit-extension-stackstate
       namespace: NAMESPACE
     spec:
@@ -194,7 +194,7 @@ manifest should match snapshot with existing secret:
     kind: Deployment
     metadata:
       labels:
-        steadybit.com/discovery-enabled: "false"
+        steadybit.com/discovery-disabled: "true"
       name: RELEASE-NAME-steadybit-extension-stackstate
       namespace: NAMESPACE
     spec:
@@ -253,7 +253,7 @@ manifest should match snapshot with extra env vars:
     kind: Deployment
     metadata:
       labels:
-        steadybit.com/discovery-enabled: "false"
+        steadybit.com/discovery-disabled: "true"
       name: RELEASE-NAME-steadybit-extension-stackstate
       namespace: NAMESPACE
     spec:
@@ -313,13 +313,71 @@ manifest should match snapshot with extra env vars:
                 runAsUser: 10000
               volumeMounts: null
           volumes: null
+manifest should match snapshot with extra labels:
+  1: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      labels:
+        steadybit.com/discovery-disabled: "true"
+        tags.datadoghq.com/service: steadybit-extension
+      name: RELEASE-NAME-steadybit-extension-stackstate
+      namespace: NAMESPACE
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: steadybit-extension-stackstate
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: steadybit-extension-stackstate
+        spec:
+          containers:
+            - env:
+                - name: STEADYBIT_LOG_LEVEL
+                  value: INFO
+                - name: STEADYBIT_LOG_FORMAT
+                  value: text
+                - name: STEADYBIT_EXTENSION_SERVICE_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      key: service-token
+                      name: steadybit-extension-stackstate
+                - name: STEADYBIT_EXTENSION_API_BASE_URL
+                  value: null
+              image: ghcr.io/steadybit/extension-stackstate:latest
+              imagePullPolicy: Always
+              livenessProbe:
+                httpGet:
+                  path: /health/liveness
+                  port: 8084
+              name: extension
+              readinessProbe:
+                httpGet:
+                  path: /health/readiness
+                  port: 8084
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+              securityContext:
+                readOnlyRootFilesystem: true
+                runAsGroup: 10000
+                runAsNonRoot: true
+                runAsUser: 10000
+              volumeMounts: null
+          volumes: null
 manifest should match snapshot with mutual TLS:
   1: |
     apiVersion: apps/v1
     kind: Deployment
     metadata:
       labels:
-        steadybit.com/discovery-enabled: "false"
+        steadybit.com/discovery-disabled: "true"
       name: RELEASE-NAME-steadybit-extension-stackstate
       namespace: NAMESPACE
     spec:
@@ -463,7 +521,7 @@ manifest should match snapshot without TLS:
     kind: Deployment
     metadata:
       labels:
-        steadybit.com/discovery-enabled: "false"
+        steadybit.com/discovery-disabled: "true"
       name: RELEASE-NAME-steadybit-extension-stackstate
       namespace: NAMESPACE
     spec:

@@ -23,25 +23,23 @@ manifest should match snapshot with mutual TLS:
     metadata:
       annotations:
         steadybit.com/extension-auto-discovery: |
-          {"extensions":[{"port":8083,"protocol":"https","types":["ACTION","DISCOVERY"]}]}
-      labels: null
-      name: RELEASE-NAME-steadybit-extension-stackstate
-      namespace: NAMESPACE
-    spec:
-      ports:
-        - port: 8083
-          protocol: TCP
-          targetPort: 8083
-      selector:
-        app.kubernetes.io/name: steadybit-extension-stackstate
-manifest should match snapshot with mutual TLS using containerPaths:
-  1: |
-    apiVersion: v1
-    kind: Service
-    metadata:
-      annotations:
-        steadybit.com/extension-auto-discovery: |
-          {"extensions":[{"port":8083,"protocol":"https","types":["ACTION","DISCOVERY"]}]}
+          {
+            "extensions": [
+              {
+                "port": 8083,
+                "types": ["ACTION","DISCOVERY"],
+                "tls": {
+                  "server": {
+                    "extraCertsFile": "server-cert/tls.crt"
+                  },
+                  "client": {
+                    "certChainFile": "client-cert-a/tls.crt",
+                    "certKeyFile": "client-cert-a/tls.key"
+                  }
+                }
+              }
+            ]
+          }
       labels: null
       name: RELEASE-NAME-steadybit-extension-stackstate
       namespace: NAMESPACE
