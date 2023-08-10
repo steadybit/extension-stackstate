@@ -4,7 +4,7 @@ manifest should match snapshot using podAnnotations and Labels:
     kind: Deployment
     metadata:
       labels:
-        steadybit.com/discovery-enabled: "false"
+        steadybit.com/discovery-disabled: "true"
       name: RELEASE-NAME-steadybit-extension-stackstate
       namespace: NAMESPACE
     spec:
@@ -19,7 +19,7 @@ manifest should match snapshot using podAnnotations and Labels:
           labels:
             app.kubernetes.io/name: steadybit-extension-stackstate
             some-label: some-label-value
-            steadybit.com/discovery-enabled: "false"
+            steadybit.com/discovery-disabled: "true"
         spec:
           containers:
             - env:
@@ -78,7 +78,7 @@ manifest should match snapshot with TLS:
           annotations: null
           labels:
             app.kubernetes.io/name: steadybit-extension-stackstate
-            steadybit.com/discovery-enabled: "false"
+            steadybit.com/discovery-disabled: "true"
         spec:
           containers:
             - env:
@@ -148,7 +148,7 @@ manifest should match snapshot with env vars:
           annotations: null
           labels:
             app.kubernetes.io/name: steadybit-extension-stackstate
-            steadybit.com/discovery-enabled: "false"
+            steadybit.com/discovery-disabled: "true"
         spec:
           containers:
             - env:
@@ -207,7 +207,7 @@ manifest should match snapshot with existing secret:
           annotations: null
           labels:
             app.kubernetes.io/name: steadybit-extension-stackstate
-            steadybit.com/discovery-enabled: "false"
+            steadybit.com/discovery-disabled: "true"
         spec:
           containers:
             - env:
@@ -266,7 +266,7 @@ manifest should match snapshot with extra env vars:
           annotations: null
           labels:
             app.kubernetes.io/name: steadybit-extension-stackstate
-            steadybit.com/discovery-enabled: "false"
+            steadybit.com/discovery-disabled: "true"
         spec:
           containers:
             - env:
@@ -330,8 +330,10 @@ manifest should match snapshot with extra labels:
           app.kubernetes.io/name: steadybit-extension-stackstate
       template:
         metadata:
+          annotations: null
           labels:
             app.kubernetes.io/name: steadybit-extension-stackstate
+            steadybit.com/discovery-disabled: "true"
         spec:
           containers:
             - env:
@@ -390,7 +392,7 @@ manifest should match snapshot with mutual TLS:
           annotations: null
           labels:
             app.kubernetes.io/name: steadybit-extension-stackstate
-            steadybit.com/discovery-enabled: "false"
+            steadybit.com/discovery-disabled: "true"
         spec:
           containers:
             - env:
@@ -456,7 +458,7 @@ manifest should match snapshot with mutual TLS using containerPaths:
     kind: Deployment
     metadata:
       labels:
-        steadybit.com/discovery-enabled: "false"
+        steadybit.com/discovery-disabled: "true"
       name: RELEASE-NAME-steadybit-extension-stackstate
       namespace: NAMESPACE
     spec:
@@ -469,7 +471,7 @@ manifest should match snapshot with mutual TLS using containerPaths:
           annotations: null
           labels:
             app.kubernetes.io/name: steadybit-extension-stackstate
-            steadybit.com/discovery-enabled: "false"
+            steadybit.com/discovery-disabled: "true"
         spec:
           containers:
             - env:
@@ -534,7 +536,7 @@ manifest should match snapshot without TLS:
           annotations: null
           labels:
             app.kubernetes.io/name: steadybit-extension-stackstate
-            steadybit.com/discovery-enabled: "false"
+            steadybit.com/discovery-disabled: "true"
         spec:
           containers:
             - env:
