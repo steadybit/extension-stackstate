@@ -58,6 +58,7 @@ manifest should match snapshot using podAnnotations and Labels:
                 runAsNonRoot: true
                 runAsUser: 10000
               volumeMounts: null
+          serviceAccountName: steadybit-extension-stackstate
           volumes: null
 manifest should match snapshot with TLS:
   1: |
@@ -124,6 +125,7 @@ manifest should match snapshot with TLS:
                 - mountPath: /etc/extension/certificates/server-cert
                   name: certificate-server-cert
                   readOnly: true
+          serviceAccountName: steadybit-extension-stackstate
           volumes:
             - name: certificate-server-cert
               secret:
@@ -187,6 +189,7 @@ manifest should match snapshot with env vars:
                 runAsNonRoot: true
                 runAsUser: 10000
               volumeMounts: null
+          serviceAccountName: steadybit-extension-stackstate
           volumes: null
 manifest should match snapshot with existing secret:
   1: |
@@ -246,6 +249,7 @@ manifest should match snapshot with existing secret:
                 runAsNonRoot: true
                 runAsUser: 10000
               volumeMounts: null
+          serviceAccountName: steadybit-extension-stackstate
           volumes: null
 manifest should match snapshot with extra env vars:
   1: |
@@ -312,6 +316,7 @@ manifest should match snapshot with extra env vars:
                 runAsNonRoot: true
                 runAsUser: 10000
               volumeMounts: null
+          serviceAccountName: steadybit-extension-stackstate
           volumes: null
 manifest should match snapshot with extra labels:
   1: |
@@ -373,6 +378,7 @@ manifest should match snapshot with extra labels:
                 runAsNonRoot: true
                 runAsUser: 10000
               volumeMounts: null
+          serviceAccountName: steadybit-extension-stackstate
           volumes: null
 manifest should match snapshot with mutual TLS:
   1: |
@@ -444,6 +450,7 @@ manifest should match snapshot with mutual TLS:
                 - mountPath: /etc/extension/certificates/server-cert
                   name: certificate-server-cert
                   readOnly: true
+          serviceAccountName: steadybit-extension-stackstate
           volumes:
             - name: certificate-client-cert-a
               secret:
@@ -517,6 +524,7 @@ manifest should match snapshot with mutual TLS using containerPaths:
                 runAsNonRoot: true
                 runAsUser: 10000
               volumeMounts: null
+          serviceAccountName: steadybit-extension-stackstate
           volumes: null
 manifest should match snapshot without TLS:
   1: |
@@ -576,4 +584,5 @@ manifest should match snapshot without TLS:
                 runAsNonRoot: true
                 runAsUser: 10000
               volumeMounts: null
+          serviceAccountName: steadybit-extension-stackstate
           volumes: null
