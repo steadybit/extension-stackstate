@@ -67,13 +67,13 @@ func getServiceTargetDescription() discovery_kit_api.TargetDescription {
 		Icon:     extutil.Ptr(serviceIcon),
 		Table: discovery_kit_api.Table{
 			Columns: []discovery_kit_api.Column{
-				{Attribute: "stackstate.service"},
-				{Attribute: "stackstate.namespace"},
-				{Attribute: "stackstate.cluster-name"},
+				{Attribute: "k8s.service.name"},
+				{Attribute: "k8s.namespace"},
+				{Attribute: "k8s.cluster-name"},
 			},
 			OrderBy: []discovery_kit_api.OrderBy{
 				{
-					Attribute: "stackstate.service",
+					Attribute: "k8s.service.name",
 					Direction: "ASC",
 				},
 			},
@@ -85,19 +85,19 @@ func getServiceAttributeDescriptions() discovery_kit_api.AttributeDescriptions {
 	return discovery_kit_api.AttributeDescriptions{
 		Attributes: []discovery_kit_api.AttributeDescription{
 			{
-				Attribute: "stackstate.service",
+				Attribute: "k8s.service.name",
 				Label: discovery_kit_api.PluralLabel{
 					One:   "Service",
 					Other: "Services",
 				},
 			}, {
-				Attribute: "stackstate.namespace",
+				Attribute: "k8s.namespace",
 				Label: discovery_kit_api.PluralLabel{
 					One:   "Namespace name",
 					Other: "Namespace names",
 				},
 			}, {
-				Attribute: "stackstate.cluster-name",
+				Attribute: "k8s.cluster-name",
 				Label: discovery_kit_api.PluralLabel{
 					One:   "Cluster name",
 					Other: "Cluster names",
@@ -160,10 +160,10 @@ func toService(service Component) discovery_kit_api.Target {
 	clusterName := service.Properties.ClusterNameIdentifier[len("urn:cluster:/kubernetes:"):]
 	namespace := service.Properties.NamespaceIdentifier[len(fmt.Sprintf("urn:kubernetes:/%v:namespace/", clusterName)):]
 	attributes := make(map[string][]string)
-	attributes["stackstate.service"] = []string{service.Name}
+	attributes["k8s.service.name"] = []string{service.Name}
 	attributes["stackstate.service.id"] = []string{strconv.Itoa(service.Id)}
-	attributes["stackstate.namespace"] = []string{namespace}
-	attributes["stackstate.cluster-name"] = []string{clusterName}
+	attributes["k8s.namespace"] = []string{namespace}
+	attributes["k8s.cluster-name"] = []string{clusterName}
 
 	return discovery_kit_api.Target{
 		Id:         strconv.Itoa(service.Id),

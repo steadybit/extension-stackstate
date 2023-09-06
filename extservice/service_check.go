@@ -57,7 +57,7 @@ func (m *ServiceStatusCheckAction) Describe() action_kit_api.ActionDescription {
 				{
 					Label:       "default",
 					Description: extutil.Ptr("Find service by cluster, namespace and service"),
-					Query:       "stackstate.cluster-name=\"\" AND stackstate.namespace=\"\" AND stackstate.service=\"\"",
+					Query:       "k8s.cluster-name=\"\" AND k8s.namespace=\"\" AND k8s.service.name=\"\"",
 				},
 			}),
 		}),
@@ -109,7 +109,7 @@ func (m *ServiceStatusCheckAction) Describe() action_kit_api.ActionDescription {
 					From: "stackstate.service.id",
 				},
 				Label: action_kit_api.StateOverTimeWidgetLabelConfig{
-					From: "stackstate.service",
+					From: "k8s.service.name",
 				},
 				State: action_kit_api.StateOverTimeWidgetStateConfig{
 					From: "state",
@@ -148,8 +148,8 @@ func (m *ServiceStatusCheckAction) Prepare(_ context.Context, state *ServiceStat
 	}
 
 	state.ServiceId = serviceId[0]
-	state.ServiceName = request.Target.Attributes["stackstate.service"][0]
-	state.ClusterName = request.Target.Attributes["stackstate.cluster-name"][0]
+	state.ServiceName = request.Target.Attributes["k8s.service.name"][0]
+	state.ClusterName = request.Target.Attributes["k8s.cluster-name"][0]
 	state.End = end
 	state.ExpectedStatus = expectedStatus
 
@@ -259,7 +259,7 @@ func toMetric(service *Component, now time.Time) *action_kit_api.Metric {
 		Name: extutil.Ptr("stackstate_service_status"),
 		Metric: map[string]string{
 			"stackstate.service.id": strconv.Itoa(service.Id),
-			"stackstate.service":    service.Name,
+			"k8s.service.name":      service.Name,
 			"state":                 state,
 			"tooltip":               tooltip,
 			"url":                   fmt.Sprintf("%s/#/components/%s", uiBaseUrl, url.QueryEscape(service.Identifiers[0])),
