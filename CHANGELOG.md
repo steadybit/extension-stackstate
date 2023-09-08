@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.0.2
+
+- algin the attribute names for kubernetes objects
 
 ## v1.0.2
 
