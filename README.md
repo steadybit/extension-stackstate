@@ -15,10 +15,11 @@ You need to have a StackState service token. The following steps describe how to
 
 ## Configuration
 
-| Environment Variable                | Helm value                | Meaning                                                                       | Required | Default |
-|-------------------------------------|---------------------------|-------------------------------------------------------------------------------|----------|---------|
-| `STEADYBIT_EXTENSION_SERVICE_TOKEN` | `stackstate.serviceToken` | Stack State Service Token                                                     | yes      |         |
-| `STEADYBIT_EXTENSION_API_BASE_URL`  | `stackstate.apiBaseUrl`   | Stack State API Base URL (example: https://yourcompany.app.stackstate.io/api) | yes      |         |
+| Environment Variable                                        | Helm value                              | Meaning                                                                                                                 | Required | Default |
+|-------------------------------------------------------------|-----------------------------------------|-------------------------------------------------------------------------------------------------------------------------|----------|---------|
+| `STEADYBIT_EXTENSION_SERVICE_TOKEN`                         | `stackstate.serviceToken`               | Stack State Service Token                                                                                               | yes      |         |
+| `STEADYBIT_EXTENSION_API_BASE_URL`                          | `stackstate.apiBaseUrl`                 | Stack State API Base URL (example: https://yourcompany.app.stackstate.io/api)                                           | yes      |         |
+| `STEADYBIT_EXTENSION_DISCOVERY_ATTRIBUTES_EXCLUDES_SERVICE` | `discovery.attributes.excludes.service` | List of Service Attributes which will be excluded during discovery. Checked by key equality and supporting trailing "*" | no       |         |
 
 
 The extension supports all environment variables provided by [steadybit/extension-kit](https://github.com/steadybit/extension-kit#environment-variables).

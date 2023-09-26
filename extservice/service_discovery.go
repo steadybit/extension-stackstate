@@ -9,10 +9,12 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
-	"github.com/steadybit/extension-kit/extbuild"
+  "github.com/steadybit/discovery-kit/go/discovery_kit_commons"
+  "github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/exthttp"
 	"github.com/steadybit/extension-kit/extutil"
-	"net/http"
+  "github.com/steadybit/extension-stackstate/config"
+  "net/http"
 	"strconv"
 )
 
@@ -153,7 +155,7 @@ func GetAllServices(ctx context.Context, client *resty.Client) []discovery_kit_a
 			result = append(result, toService(component))
 		}
 	}
-	return result
+	return discovery_kit_commons.ApplyAttributeExcludes(result, config.Config.DiscoveryAttributesExcludesService)
 }
 
 func toService(service Component) discovery_kit_api.Target {
