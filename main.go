@@ -17,6 +17,7 @@ import (
 	"github.com/steadybit/extension-kit/extruntime"
 	"github.com/steadybit/extension-stackstate/config"
 	"github.com/steadybit/extension-stackstate/extservice"
+	_ "net/http/pprof" //allow pprof
 )
 
 func main() {
