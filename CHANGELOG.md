@@ -1,5 +1,10 @@
 # Changelog
 
+
+## v1.0.4
+
+- Possibility to exclude attributes from discovery
+
 ## v1.0.3
 
 - algin the attribute names for kubernetes objects
