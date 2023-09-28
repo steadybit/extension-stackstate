@@ -9,12 +9,12 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
-  "github.com/steadybit/discovery-kit/go/discovery_kit_commons"
-  "github.com/steadybit/extension-kit/extbuild"
+	"github.com/steadybit/discovery-kit/go/discovery_kit_commons"
+	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/exthttp"
 	"github.com/steadybit/extension-kit/extutil"
-  "github.com/steadybit/extension-stackstate/config"
-  "net/http"
+	"github.com/steadybit/extension-stackstate/config"
+	"net/http"
 	"strconv"
 )
 
