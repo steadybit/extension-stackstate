@@ -1,6 +1,11 @@
 # Changelog
 
 
+## v1.0.5
+
+- Added `pprof` endpoints for debugging purposes
+- Update dependencies
+
 ## v1.0.4
 
 - Possibility to exclude attributes from discovery
