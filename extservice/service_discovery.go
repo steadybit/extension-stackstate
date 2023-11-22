@@ -10,57 +10,41 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_commons"
+	"github.com/steadybit/discovery-kit/go/discovery_kit_sdk"
 	"github.com/steadybit/extension-kit/extbuild"
-	"github.com/steadybit/extension-kit/exthttp"
 	"github.com/steadybit/extension-kit/extutil"
 	"github.com/steadybit/extension-stackstate/config"
-	"net/http"
 	"strconv"
+	"time"
 )
 
-func RegisterServiceDiscoveryHandlers() {
-	exthttp.RegisterHttpHandler("/service/discovery", exthttp.GetterAsHandler(getServiceDiscoveryDescription))
-	exthttp.RegisterHttpHandler("/service/discovery/target-description", exthttp.GetterAsHandler(getServiceTargetDescription))
-	exthttp.RegisterHttpHandler("/service/discovery/attribute-descriptions", exthttp.GetterAsHandler(getServiceAttributeDescriptions))
-	exthttp.RegisterHttpHandler("/service/discovery/discovered-targets", getServiceDiscoveryResults)
+type serviceDiscovery struct {
 }
 
-func GetDiscoveryList() discovery_kit_api.DiscoveryList {
-	return discovery_kit_api.DiscoveryList{
-		Discoveries: []discovery_kit_api.DescribingEndpointReference{
-			{
-				Method: "GET",
-				Path:   "/service/discovery",
-			},
-		},
-		TargetTypes: []discovery_kit_api.DescribingEndpointReference{
-			{
-				Method: "GET",
-				Path:   "/service/discovery/target-description",
-			},
-		},
-		TargetAttributes: []discovery_kit_api.DescribingEndpointReference{
-			{
-				Method: "GET",
-				Path:   "/service/discovery/attribute-descriptions",
-			},
-		},
-	}
+var (
+	_ discovery_kit_sdk.TargetDescriber    = (*serviceDiscovery)(nil)
+	_ discovery_kit_sdk.AttributeDescriber = (*serviceDiscovery)(nil)
+)
+
+func NewServiceDiscovery() discovery_kit_sdk.TargetDiscovery {
+	discovery := &serviceDiscovery{}
+	return discovery_kit_sdk.NewCachedTargetDiscovery(discovery,
+		discovery_kit_sdk.WithRefreshTargetsNow(),
+		discovery_kit_sdk.WithRefreshTargetsInterval(context.Background(), 1*time.Minute),
+	)
 }
 
-func getServiceDiscoveryDescription() discovery_kit_api.DiscoveryDescription {
+func (d *serviceDiscovery) Describe() discovery_kit_api.DiscoveryDescription {
 	return discovery_kit_api.DiscoveryDescription{
 		Id:         serviceTargetType,
 		RestrictTo: extutil.Ptr(discovery_kit_api.LEADER),
 		Discover: discovery_kit_api.DescribingEndpointReferenceWithCallInterval{
-			Method:       "GET",
-			Path:         "/service/discovery/discovered-targets",
-			CallInterval: extutil.Ptr("5m"),
+			CallInterval: extutil.Ptr("1m"),
 		},
 	}
 }
 
-func getServiceTargetDescription() discovery_kit_api.TargetDescription {
+func (d *serviceDiscovery) DescribeTarget() discovery_kit_api.TargetDescription {
 	return discovery_kit_api.TargetDescription{
 		Id:       serviceTargetType,
 		Label:    discovery_kit_api.PluralLabel{One: "StackState service", Other: "StackState services"},
@@ -83,37 +67,35 @@ func getServiceTargetDescription() discovery_kit_api.TargetDescription {
 	}
 }
 
-func getServiceAttributeDescriptions() discovery_kit_api.AttributeDescriptions {
-	return discovery_kit_api.AttributeDescriptions{
-		Attributes: []discovery_kit_api.AttributeDescription{
-			{
-				Attribute: "k8s.service.name",
-				Label: discovery_kit_api.PluralLabel{
-					One:   "Service",
-					Other: "Services",
-				},
-			}, {
-				Attribute: "k8s.namespace",
-				Label: discovery_kit_api.PluralLabel{
-					One:   "Namespace name",
-					Other: "Namespace names",
-				},
-			}, {
-				Attribute: "k8s.cluster-name",
-				Label: discovery_kit_api.PluralLabel{
-					One:   "Cluster name",
-					Other: "Cluster names",
-				},
+func (d *serviceDiscovery) DescribeAttributes() []discovery_kit_api.AttributeDescription {
+	return []discovery_kit_api.AttributeDescription{
+		{
+			Attribute: "k8s.service.name",
+			Label: discovery_kit_api.PluralLabel{
+				One:   "Service",
+				Other: "Services",
+			},
+		}, {
+			Attribute: "k8s.namespace",
+			Label: discovery_kit_api.PluralLabel{
+				One:   "Namespace name",
+				Other: "Namespace names",
+			},
+		}, {
+			Attribute: "k8s.cluster-name",
+			Label: discovery_kit_api.PluralLabel{
+				One:   "Cluster name",
+				Other: "Cluster names",
 			},
 		},
 	}
 }
 
-func getServiceDiscoveryResults(w http.ResponseWriter, r *http.Request, _ []byte) {
-	exthttp.WriteBody(w, discovery_kit_api.DiscoveredTargets{Targets: GetAllServices(r.Context(), RestyClient)})
+func (d *serviceDiscovery) DiscoverTargets(ctx context.Context) ([]discovery_kit_api.Target, error) {
+	return getAllServices(ctx, RestyClient), nil
 }
 
-func GetAllServices(ctx context.Context, client *resty.Client) []discovery_kit_api.Target {
+func getAllServices(ctx context.Context, client *resty.Client) []discovery_kit_api.Target {
 	result := make([]discovery_kit_api.Target, 0, 500)
 
 	var stackStateResponse ViewSnapshotResponseWrapper
