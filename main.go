@@ -10,6 +10,7 @@ import (
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/action-kit/go/action_kit_sdk"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
+	"github.com/steadybit/discovery-kit/go/discovery_kit_sdk"
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/exthealth"
 	"github.com/steadybit/extension-kit/exthttp"
@@ -35,7 +36,7 @@ func main() {
 
 	exthttp.RegisterHttpHandler("/", exthttp.GetterAsHandler(getExtensionList))
 
-	extservice.RegisterServiceDiscoveryHandlers()
+	discovery_kit_sdk.Register(extservice.NewServiceDiscovery())
 	action_kit_sdk.RegisterAction(extservice.NewServiceStatusCheckAction())
 
 	action_kit_sdk.InstallSignalHandler()
@@ -64,6 +65,6 @@ type ExtensionListResponse struct {
 func getExtensionList() ExtensionListResponse {
 	return ExtensionListResponse{
 		ActionList:    action_kit_sdk.GetActionList(),
-		DiscoveryList: extservice.GetDiscoveryList(),
+		DiscoveryList: discovery_kit_sdk.GetDiscoveryList(),
 	}
 }
