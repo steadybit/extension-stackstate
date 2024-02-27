@@ -5,6 +5,7 @@
 package main
 
 import (
+	_ "github.com/KimMachineGun/automemlimit" // By default, it sets `GOMEMLIMIT` to 90% of cgroup's memory limit.
 	"github.com/go-resty/resty/v2"
 	"github.com/rs/zerolog"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
@@ -18,7 +19,8 @@ import (
 	"github.com/steadybit/extension-kit/extruntime"
 	"github.com/steadybit/extension-stackstate/config"
 	"github.com/steadybit/extension-stackstate/extservice"
-	_ "net/http/pprof" //allow pprof
+	_ "go.uber.org/automaxprocs" // Importing automaxprocs automatically adjusts GOMAXPROCS.
+	_ "net/http/pprof"           //allow pprof
 )
 
 func main() {
