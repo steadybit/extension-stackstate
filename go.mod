@@ -6,7 +6,7 @@ toolchain go1.21.7
 
 require (
 	github.com/KimMachineGun/automemlimit v0.5.0
-	github.com/go-resty/resty/v2 v2.11.0
+	github.com/go-resty/resty/v2 v2.12.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/rs/zerolog v1.32.0
 	github.com/steadybit/action-kit/go/action_kit_api/v2 v2.9.0
@@ -43,7 +43,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/zmwangx/debounce v1.0.0 // indirect
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
-	golang.org/x/net v0.21.0 // indirect
+	golang.org/x/net v0.22.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
