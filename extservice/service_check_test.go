@@ -40,5 +40,5 @@ func TestPrepareExtractsState(t *testing.T) {
 	require.Equal(t, state.ServiceName, "test")
 	require.Equal(t, state.ClusterName, "test-cluster")
 	require.Equal(t, state.ExpectedStatus, "200")
-	
+
 }
