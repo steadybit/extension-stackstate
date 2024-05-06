@@ -48,7 +48,7 @@ helm upgrade steadybit-extension-stackstate \
     --wait \
     --timeout 5m0s \
     --create-namespace \
-    --namespace steadybit-extension \
+    --namespace steadybit-agent \
     --set stackstate.serviceToken="{{SERVICE_TOKEN}}" \
     --set stackstate.apiBaseUrl="{{API_BASE_URL}}" \
     steadybit-extension-stackstate/steadybit-extension-stackstate
