@@ -1,3 +1,7 @@
+/*
+ * Copyright 2024 steadybit GmbH. All rights reserved.
+ */
+
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2022 Steadybit GmbH
 
@@ -131,6 +135,8 @@ func getAllServices(ctx context.Context, client *resty.Client) []discovery_kit_a
 		return result
 	}
 
+	log.Trace().Msgf("Stackstate response: %v", stackStateResponse.ViewSnapshotResponse.Components)
+
 	if len(stackStateResponse.ViewSnapshotResponse.Components) > 0 {
 		for _, component := range stackStateResponse.ViewSnapshotResponse.Components {
 			result = append(result, toService(component))
@@ -142,16 +148,15 @@ func getAllServices(ctx context.Context, client *resty.Client) []discovery_kit_a
 func toService(service Component) discovery_kit_api.Target {
 	clusterName := service.Properties.ClusterNameIdentifier[len("urn:cluster:/kubernetes:"):]
 	namespace := service.Properties.NamespaceIdentifier[len(fmt.Sprintf("urn:kubernetes:/%v:namespace/", clusterName)):]
-	attributes := make(map[string][]string)
-	attributes["k8s.service.name"] = []string{service.Name}
-	attributes["stackstate.service.id"] = []string{strconv.Itoa(service.Id)}
-	attributes["k8s.namespace"] = []string{namespace}
-	attributes["k8s.cluster-name"] = []string{clusterName}
-
 	return discovery_kit_api.Target{
 		Id:         strconv.Itoa(service.Id),
 		Label:      service.Name,
 		TargetType: serviceTargetType,
-		Attributes: attributes,
+		Attributes: map[string][]string{
+			"k8s.service.name":      {service.Name},
+			"stackstate.service.id": {strconv.Itoa(service.Id)},
+			"k8s.namespace":         {namespace},
+			"k8s.cluster-name":      {clusterName},
+		},
 	}
 }

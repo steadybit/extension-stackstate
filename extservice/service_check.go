@@ -1,3 +1,7 @@
+/*
+ * Copyright 2024 steadybit GmbH. All rights reserved.
+ */
+
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2022 Steadybit GmbH
 
@@ -125,8 +129,6 @@ func (m *ServiceStatusCheckAction) Describe() action_kit_api.ActionDescription {
 				}),
 			},
 		}),
-		Prepare: action_kit_api.MutatingEndpointReference{},
-		Start:   action_kit_api.MutatingEndpointReference{},
 		Status: extutil.Ptr(action_kit_api.MutatingEndpointReferenceWithCallInterval{
 			CallInterval: extutil.Ptr("1s"),
 		}),
@@ -196,7 +198,7 @@ func MonitorStatusCheckStatus(ctx context.Context, state *ServiceStatusCheckStat
 	}
 
 	var component Component
-	if res.StatusCode() != 200 {
+	if !res.IsSuccess() {
 		log.Err(err).Msgf("StackState API responded with unexpected status code %d while retrieving service states for Service ID %s. Full response: %v", res.StatusCode(), state.ServiceId, res.String())
 		serviceIdInt, parseErr := strconv.Atoi(state.ServiceId)
 		if parseErr != nil {
