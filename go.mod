@@ -6,7 +6,7 @@ toolchain go1.22.2
 
 require (
 	github.com/KimMachineGun/automemlimit v0.6.1
-	github.com/go-resty/resty/v2 v2.15.0
+	github.com/go-resty/resty/v2 v2.15.2
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/rs/zerolog v1.33.0
 	github.com/steadybit/action-kit/go/action_kit_api/v2 v2.9.2
