@@ -66,6 +66,7 @@ func (m *ServiceStatusCheckAction) Describe() action_kit_api.ActionDescription {
 			}),
 		}),
 		Technology:  extutil.Ptr("StackState"),
+		Category:    extutil.Ptr("StackState"), //Can be removed in Q1/24 - support for backward compatibility of old sidebar
 		Kind:        action_kit_api.Check,
 		TimeControl: action_kit_api.TimeControlInternal,
 		Parameters: []action_kit_api.ActionParameter{
