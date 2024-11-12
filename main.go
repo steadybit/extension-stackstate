@@ -41,7 +41,7 @@ func main() {
 	discovery_kit_sdk.Register(extservice.NewServiceDiscovery())
 	action_kit_sdk.RegisterAction(extservice.NewServiceStatusCheckAction())
 
-	action_kit_sdk.InstallSignalHandler()
+	extsignals.ActivateSignalHandlers()
 
 	action_kit_sdk.RegisterCoverageEndpoints()
 
