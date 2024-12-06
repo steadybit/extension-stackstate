@@ -12,6 +12,35 @@ entries:
           url: https://hub.steadybit.com
     apiVersion: v2
     appVersion: v1.0.11
+    created: "2024-12-06T14:04:34.54896242Z"
+    dependencies:
+    - name: extensionlib
+      repository: https://steadybit.github.io/helm-charts
+      version: ^1.4.4
+    description: Steadybit stackstate extension Helm chart for Kubernetes.
+    digest: f23490cfc3e90fb074a445c5c55a5035cb0f734f086bc04cd6dd44d70aed498b
+    home: https://www.steadybit.com/
+    icon: https://steadybit-website-assets.s3.amazonaws.com/logo-symbol-transparent.png
+    maintainers:
+    - email: daniel.reuter@steadybit.com
+      name: reuda
+    name: steadybit-extension-stackstate
+    sources:
+    - https://github.com/steadybit/extension-stackstate
+    urls:
+    - https://github.com/steadybit/extension-stackstate/releases/download/steadybit-extension-stackstate-1.1.7/steadybit-extension-stackstate-1.1.7.tgz
+    version: 1.1.7
+  - annotations:
+      artifacthub.io/images: |
+        - name: logo
+          image: https://steadybit-website-assets.s3.amazonaws.com/logo-symbol-transparent.png
+      artifacthub.io/links: |-
+        - name: Steadybit website
+          url: https://www.steadybit.com
+        - name: Steadybit reliability hub
+          url: https://hub.steadybit.com
+    apiVersion: v2
+    appVersion: v1.0.11
     created: "2024-10-21T17:39:59.466348408Z"
     dependencies:
     - name: extensionlib
@@ -726,4 +755,4 @@ entries:
     urls:
     - https://github.com/steadybit/extension-stackstate/releases/download/steadybit-extension-stackstate-1.0.1/steadybit-extension-stackstate-1.0.1.tgz
     version: 1.0.1
-generated: "2024-10-21T17:39:59.466538353Z"
+generated: "2024-12-06T14:04:34.549148117Z"
