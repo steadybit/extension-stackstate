@@ -59,7 +59,7 @@ func (m *ServiceStatusCheckAction) Describe() action_kit_api.ActionDescription {
 			QuantityRestriction: extutil.Ptr(action_kit_api.All),
 			SelectionTemplates: extutil.Ptr([]action_kit_api.TargetSelectionTemplate{
 				{
-					Label:       "default",
+					Label:       "service name",
 					Description: extutil.Ptr("Find service by cluster, namespace and service"),
 					Query:       "k8s.cluster-name=\"\" AND k8s.namespace=\"\" AND k8s.service.name=\"\"",
 				},
