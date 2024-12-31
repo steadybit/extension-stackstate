@@ -1,0 +1,11 @@
+name: ghcr-cleanup
+
+on:
+  workflow_dispatch: { }
+
+jobs:
+  ghcr-cleanup:
+    uses: steadybit/extension-kit/.github/workflows/reusable-ghcr-cleanup.yml@main
+    secrets:
+      token: ${{ secrets.GHCR_CLEANUP_PAT }}
+      dry-run: true
