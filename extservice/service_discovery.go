@@ -117,7 +117,10 @@ func getAllServices(ctx context.Context, client *resty.Client) []discovery_kit_a
         "groupedByDomain": false,
         "groupedByRelation": false,
         "showCause": "NONE",
-        "autoGrouping": false
+        "autoGrouping": false,
+        "connectedComponents": false,
+        "neighboringComponents": false,
+        "showFullComponent": false
     }
   }`)).
 		SetResult(&stackStateResponse).

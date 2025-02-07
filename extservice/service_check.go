@@ -183,7 +183,10 @@ func MonitorStatusCheckStatus(ctx context.Context, state *ServiceStatusCheckStat
         "groupedByDomain": false,
         "groupedByRelation": false,
         "showCause": "NONE",
-        "autoGrouping": false
+        "autoGrouping": false,
+        "connectedComponents": false,
+        "neighboringComponents": false,
+        "showFullComponent": false
     }
   }`, state.ServiceId)
 
