@@ -200,52 +200,27 @@ func (m *ServiceStatusCheckAction) Status(ctx context.Context, state *ServiceSta
 
 func MonitorStatusCheckStatus(ctx context.Context, state *ServiceStatusCheckState, api GetSnapshotApi) (*action_kit_api.StatusResult, error) {
 	now := time.Now()
-	res, stackStateResponse, err := api.GetServiceSnapshot(ctx, state.ServiceId)
-
+	component, err := loadServiceComponent(ctx, state, api)
 	if err != nil {
-		return nil, extutil.Ptr(extension_kit.ToError(fmt.Sprintf("Failed to retrieve service states from StackState for Service ID %s. Full response: %v", state.ServiceId, res.String()), err))
+		return nil, err
 	}
-
-	var component Component
-	if !res.IsSuccess() {
-		log.Err(err).Msgf("StackState API responded with unexpected status code %d while retrieving service states for Service ID %s. Full response: %v", res.StatusCode(), state.ServiceId, res.String())
-		serviceIdInt, parseErr := strconv.Atoi(state.ServiceId)
-		if parseErr != nil {
-			return nil, extutil.Ptr(extension_kit.ToError(fmt.Sprintf("Failed to parse int %s", state.ServiceId), parseErr))
-		}
-		component = Component{
-			Id:   serviceIdInt,
-			Name: state.ServiceName,
-			State: State{
-				HealthState: "UNKNOWN",
-			},
-			Identifiers: []string{fmt.Sprintf("urn:service:/%s:%s:%s", state.ClusterName, state.ServiceName, state.ServiceId)},
-		}
-	} else {
-		component = stackStateResponse.ViewSnapshotResponse.Components[0]
-	}
-
 	completed := now.After(state.End)
+
 	var checkError *action_kit_api.ActionKitError
 	if len(state.ExpectedStatus) > 0 {
 		componentHealthState := component.State.HealthState
-		if state.StatusCheckMode == statusCheckModeAllTheTime {
-			if componentHealthState != state.ExpectedStatus || !state.StatusCheckSuccess {
-				state.StatusCheckSuccess = false
-				completed = true
-				checkError = extutil.Ptr(action_kit_api.ActionKitError{
-					Title: fmt.Sprintf("Service '%s' (id %s) has status '%s' whereas '%s' is expected.",
-						component.Name,
-						state.ServiceId,
-						componentHealthState,
-						state.ExpectedStatus),
-					Status: extutil.Ptr(action_kit_api.Failed),
-				})
-			}
+		if state.StatusCheckMode == statusCheckModeAllTheTime && componentHealthState != state.ExpectedStatus {
+			checkError = extutil.Ptr(action_kit_api.ActionKitError{
+				Title: fmt.Sprintf("Service '%s' (id %s) has status '%s' whereas '%s' is expected.",
+					component.Name,
+					state.ServiceId,
+					componentHealthState,
+					state.ExpectedStatus),
+				Status: extutil.Ptr(action_kit_api.Failed),
+			})
 		} else if state.StatusCheckMode == statusCheckModeAtLeastOnce {
-			if componentHealthState == state.ExpectedStatus || state.StatusCheckSuccess {
+			if componentHealthState == state.ExpectedStatus {
 				state.StatusCheckSuccess = true
-				completed = true
 			}
 			if completed && !state.StatusCheckSuccess {
 				checkError = extutil.Ptr(action_kit_api.ActionKitError{
@@ -259,15 +234,36 @@ func MonitorStatusCheckStatus(ctx context.Context, state *ServiceStatusCheckStat
 		}
 	}
 
-	metrics := []action_kit_api.Metric{
-		*toMetric(&component, now),
-	}
-
 	return &action_kit_api.StatusResult{
 		Completed: completed,
 		Error:     checkError,
-		Metrics:   extutil.Ptr(metrics),
+		Metrics: &[]action_kit_api.Metric{
+			*toMetric(component, now),
+		},
 	}, nil
+}
+
+func loadServiceComponent(ctx context.Context, state *ServiceStatusCheckState, api GetSnapshotApi) (*Component, error) {
+	res, stackStateResponse, err := api.GetServiceSnapshot(ctx, state.ServiceId)
+	if err != nil {
+		return nil, extutil.Ptr(extension_kit.ToError(fmt.Sprintf("Failed to retrieve service states from StackState for Service ID %s. Full response: %v", state.ServiceId, res.String()), err))
+	}
+	if !res.IsSuccess() {
+		log.Err(err).Msgf("StackState API responded with unexpected status code %d while retrieving service states for Service ID %s. Full response: %v", res.StatusCode(), state.ServiceId, res.String())
+		serviceIdInt, parseErr := strconv.Atoi(state.ServiceId)
+		if parseErr != nil {
+			return nil, extutil.Ptr(extension_kit.ToError(fmt.Sprintf("Failed to parse int %s", state.ServiceId), parseErr))
+		}
+		return &Component{
+			Id:   serviceIdInt,
+			Name: state.ServiceName,
+			State: State{
+				HealthState: "UNKNOWN",
+			},
+			Identifiers: []string{fmt.Sprintf("urn:service:/%s:%s:%s", state.ClusterName, state.ServiceName, state.ServiceId)},
+		}, nil
+	}
+	return &stackStateResponse.ViewSnapshotResponse.Components[0], nil
 }
 
 func toMetric(service *Component, now time.Time) *action_kit_api.Metric {
