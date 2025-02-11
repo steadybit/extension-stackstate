@@ -1,9 +1,18 @@
 # Changelog
 
+## v1.0.14
+
+- Provide service status check mode to verify if the given state was observed at least once or all the time.
+
+## v1.0.13
+
+- Fix missing property in StackState API request issue.
+- Update dependencies
+
 ## v1.0.12
 
-- update dependencies
 - Use uid instead of name for user statement in Dockerfile
+- Update dependencies
 
 ## v1.0.11
 

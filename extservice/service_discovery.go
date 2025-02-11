@@ -22,13 +22,16 @@ import (
 	"time"
 )
 
-type serviceDiscovery struct {
-}
+type serviceDiscovery struct{}
 
 var (
 	_ discovery_kit_sdk.TargetDescriber    = (*serviceDiscovery)(nil)
 	_ discovery_kit_sdk.AttributeDescriber = (*serviceDiscovery)(nil)
 )
+
+type GetSnapshotsApi interface {
+	GetServiceSnapshots(ctx context.Context) (*resty.Response, ViewSnapshotResponseWrapper, error)
+}
 
 func NewServiceDiscovery() discovery_kit_sdk.TargetDiscovery {
 	discovery := &serviceDiscovery{}
@@ -95,36 +98,12 @@ func (d *serviceDiscovery) DescribeAttributes() []discovery_kit_api.AttributeDes
 }
 
 func (d *serviceDiscovery) DiscoverTargets(ctx context.Context) ([]discovery_kit_api.Target, error) {
-	return getAllServices(ctx, RestyClient), nil
+	return getAllServices(ctx, Client), nil
 }
 
-func getAllServices(ctx context.Context, client *resty.Client) []discovery_kit_api.Target {
+func getAllServices(ctx context.Context, api GetSnapshotsApi) []discovery_kit_api.Target {
 	result := make([]discovery_kit_api.Target, 0, 500)
-
-	var stackStateResponse ViewSnapshotResponseWrapper
-	res, err := client.R().
-		SetContext(ctx).
-		SetBody([]byte(`{
-    "_type": "ViewSnapshotRequest",
-    "query": "(type = \"service\")",
-    "queryVersion": "0.0.1",
-    "metadata": {
-        "_type": "QueryMetadata",
-        "groupingEnabled": false,
-        "showIndirectRelations": false,
-        "minGroupSize": 0,
-        "groupedByLayer": false,
-        "groupedByDomain": false,
-        "groupedByRelation": false,
-        "showCause": "NONE",
-        "autoGrouping": false,
-        "connectedComponents": false,
-        "neighboringComponents": false,
-        "showFullComponent": false
-    }
-  }`)).
-		SetResult(&stackStateResponse).
-		Post("/snapshot")
+	res, stackStateResponse, err := api.GetServiceSnapshots(ctx)
 
 	if err != nil {
 		log.Err(err).Msgf("Failed to retrieve service states from Stack State. Full response: %v", res.String())

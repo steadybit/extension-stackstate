@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 steadybit GmbH. All rights reserved.
+ * Copyright 2024 steadybit GmbH. All rights reserved.
  */
 
 package main
@@ -35,7 +35,7 @@ func main() {
 
 	config.ParseConfiguration()
 	config.ValidateConfiguration()
-	initRestyClient()
+	initStackStateHttpClient()
 
 	exthttp.RegisterHttpHandler("/", exthttp.GetterAsHandler(getExtensionList))
 
@@ -53,11 +53,14 @@ func main() {
 	})
 }
 
-func initRestyClient() {
-	extservice.RestyClient = resty.New()
-	extservice.RestyClient.SetBaseURL(config.Config.ApiBaseUrl)
-	extservice.RestyClient.SetHeader("X-API-Key", config.Config.ServiceToken)
-	extservice.RestyClient.SetHeader("Content-Type", "application/json")
+func initStackStateHttpClient() {
+	client := resty.New()
+	client.SetBaseURL(config.Config.ApiBaseUrl)
+	client.SetHeader("X-API-Key", config.Config.ServiceToken)
+	client.SetHeader("Content-Type", "application/json")
+	extservice.Client = &extservice.StackStateHttpClient{
+		Client: client,
+	}
 }
 
 type ExtensionListResponse struct {
