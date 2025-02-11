@@ -3,7 +3,7 @@
  */
 
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2022 Steadybit GmbH
+// SPDX-FileCopyrightText: 2024 Steadybit GmbH
 
 package extservice
 
@@ -32,11 +32,17 @@ var (
 )
 
 type ServiceStatusCheckState struct {
-	ServiceId      string
-	ServiceName    string
-	ClusterName    string
-	End            time.Time
-	ExpectedStatus string
+	ServiceId          string
+	ServiceName        string
+	ClusterName        string
+	End                time.Time
+	ExpectedStatus     string
+	StatusCheckMode    string
+	StatusCheckSuccess bool
+}
+
+type GetSnapshotApi interface {
+	GetServiceSnapshot(ctx context.Context, serviceId string) (*resty.Response, ViewSnapshotResponseWrapper, error)
 }
 
 func NewServiceStatusCheckAction() action_kit_sdk.Action[ServiceStatusCheckState] {
@@ -105,6 +111,25 @@ func (m *ServiceStatusCheckAction) Describe() action_kit_api.ActionDescription {
 				Required: extutil.Ptr(false),
 				Order:    extutil.Ptr(2),
 			},
+			{
+				Name:         "statusCheckMode",
+				Label:        "Status Check Mode",
+				Description:  extutil.Ptr("How often should the status be expected?"),
+				Type:         action_kit_api.String,
+				DefaultValue: extutil.Ptr(statusCheckModeAllTheTime),
+				Options: extutil.Ptr([]action_kit_api.ParameterOption{
+					action_kit_api.ExplicitParameterOption{
+						Label: "All the time",
+						Value: statusCheckModeAllTheTime,
+					},
+					action_kit_api.ExplicitParameterOption{
+						Label: "At least once",
+						Value: statusCheckModeAtLeastOnce,
+					},
+				}),
+				Required: extutil.Ptr(true),
+				Order:    extutil.Ptr(4),
+			},
 		},
 		Widgets: extutil.Ptr([]action_kit_api.Widget{
 			action_kit_api.StateOverTimeWidget{
@@ -149,12 +174,18 @@ func (m *ServiceStatusCheckAction) Prepare(_ context.Context, state *ServiceStat
 	if request.Config["expectedStatus"] != nil {
 		expectedStatus = fmt.Sprintf("%v", request.Config["expectedStatus"])
 	}
+	var statusCheckMode = statusCheckModeAllTheTime
+	if request.Config["statusCheckMode"] != nil {
+		statusCheckMode = fmt.Sprintf("%v", request.Config["statusCheckMode"])
+	}
 
 	state.ServiceId = serviceId[0]
 	state.ServiceName = request.Target.Attributes["k8s.service.name"][0]
 	state.ClusterName = request.Target.Attributes["k8s.cluster-name"][0]
 	state.End = end
 	state.ExpectedStatus = expectedStatus
+	state.StatusCheckMode = statusCheckMode
+	state.StatusCheckSuccess = state.StatusCheckMode == statusCheckModeAllTheTime
 
 	return nil, nil
 }
@@ -164,41 +195,15 @@ func (m *ServiceStatusCheckAction) Start(_ context.Context, _ *ServiceStatusChec
 }
 
 func (m *ServiceStatusCheckAction) Status(ctx context.Context, state *ServiceStatusCheckState) (*action_kit_api.StatusResult, error) {
-	return MonitorStatusCheckStatus(ctx, state, RestyClient)
+	return MonitorStatusCheckStatus(ctx, state, Client)
 }
 
-func MonitorStatusCheckStatus(ctx context.Context, state *ServiceStatusCheckState, client *resty.Client) (*action_kit_api.StatusResult, error) {
+func MonitorStatusCheckStatus(ctx context.Context, state *ServiceStatusCheckState, api GetSnapshotApi) (*action_kit_api.StatusResult, error) {
 	now := time.Now()
-
-	requestBody := fmt.Sprintf(`{
-    "_type": "ViewSnapshotRequest",
-    "query": "(id = \"%s\")",
-    "queryVersion": "0.0.1",
-    "metadata": {
-        "_type": "QueryMetadata",
-        "groupingEnabled": false,
-        "showIndirectRelations": false,
-        "minGroupSize": 0,
-        "groupedByLayer": false,
-        "groupedByDomain": false,
-        "groupedByRelation": false,
-        "showCause": "NONE",
-        "autoGrouping": false,
-        "connectedComponents": false,
-        "neighboringComponents": false,
-        "showFullComponent": false
-    }
-  }`, state.ServiceId)
-
-	var stackStateResponse ViewSnapshotResponseWrapper
-	res, err := client.R().
-		SetContext(ctx).
-		SetBody([]byte(requestBody)).
-		SetResult(&stackStateResponse).
-		Post("/snapshot")
+	res, stackStateResponse, err := api.GetServiceSnapshot(ctx, state.ServiceId)
 
 	if err != nil {
-		return nil, extutil.Ptr(extension_kit.ToError(fmt.Sprintf("Failed to retrieve service states from Stack State for Service ID %s. Full response: %v", state.ServiceId, res.String()), err))
+		return nil, extutil.Ptr(extension_kit.ToError(fmt.Sprintf("Failed to retrieve service states from StackState for Service ID %s. Full response: %v", state.ServiceId, res.String()), err))
 	}
 
 	var component Component
@@ -222,15 +227,36 @@ func MonitorStatusCheckStatus(ctx context.Context, state *ServiceStatusCheckStat
 
 	completed := now.After(state.End)
 	var checkError *action_kit_api.ActionKitError
-	if len(state.ExpectedStatus) > 0 && component.State.HealthState != state.ExpectedStatus {
-		checkError = extutil.Ptr(action_kit_api.ActionKitError{
-			Title: fmt.Sprintf("Service '%s' (id %s) has status '%s' whereas '%s' is expected.",
-				component.Name,
-				state.ServiceId,
-				component.State.HealthState,
-				state.ExpectedStatus),
-			Status: extutil.Ptr(action_kit_api.Failed),
-		})
+	if len(state.ExpectedStatus) > 0 {
+		componentHealthState := component.State.HealthState
+		if state.StatusCheckMode == statusCheckModeAllTheTime {
+			if componentHealthState != state.ExpectedStatus || !state.StatusCheckSuccess {
+				state.StatusCheckSuccess = false
+				completed = true
+				checkError = extutil.Ptr(action_kit_api.ActionKitError{
+					Title: fmt.Sprintf("Service '%s' (id %s) has status '%s' whereas '%s' is expected.",
+						component.Name,
+						state.ServiceId,
+						componentHealthState,
+						state.ExpectedStatus),
+					Status: extutil.Ptr(action_kit_api.Failed),
+				})
+			}
+		} else if state.StatusCheckMode == statusCheckModeAtLeastOnce {
+			if componentHealthState == state.ExpectedStatus || state.StatusCheckSuccess {
+				state.StatusCheckSuccess = true
+				completed = true
+			}
+			if completed && !state.StatusCheckSuccess {
+				checkError = extutil.Ptr(action_kit_api.ActionKitError{
+					Title: fmt.Sprintf("Service '%s' (id %s) didn't have status '%s' at least once.",
+						component.Name,
+						state.ServiceId,
+						state.ExpectedStatus),
+					Status: extutil.Ptr(action_kit_api.Failed),
+				})
+			}
+		}
 	}
 
 	metrics := []action_kit_api.Metric{
