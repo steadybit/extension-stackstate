@@ -136,19 +136,19 @@ func (m *ServiceStatusCheckAction) Describe() action_kit_api.ActionDescription {
 				Type:  action_kit_api.ComSteadybitWidgetStateOverTime,
 				Title: "StackState Service Status",
 				Identity: action_kit_api.StateOverTimeWidgetIdentityConfig{
-					From: "stackstate.service.id",
+					From: attributeServiceId,
 				},
 				Label: action_kit_api.StateOverTimeWidgetLabelConfig{
-					From: "k8s.service.name",
+					From: attributeK8ServiceName,
 				},
 				State: action_kit_api.StateOverTimeWidgetStateConfig{
-					From: "state",
+					From: attributeState,
 				},
 				Tooltip: action_kit_api.StateOverTimeWidgetTooltipConfig{
-					From: "tooltip",
+					From: attributeTooltip,
 				},
 				Url: extutil.Ptr(action_kit_api.StateOverTimeWidgetUrlConfig{
-					From: extutil.Ptr("url"),
+					From: extutil.Ptr(attributeUrl),
 				}),
 				Value: extutil.Ptr(action_kit_api.StateOverTimeWidgetValueConfig{
 					Hide: extutil.Ptr(true),
@@ -162,7 +162,7 @@ func (m *ServiceStatusCheckAction) Describe() action_kit_api.ActionDescription {
 }
 
 func (m *ServiceStatusCheckAction) Prepare(_ context.Context, state *ServiceStatusCheckState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
-	serviceId := request.Target.Attributes["stackstate.service.id"]
+	serviceId := request.Target.Attributes[attributeServiceId]
 	if len(serviceId) == 0 {
 		return nil, extutil.Ptr(extension_kit.ToError("Target is missing the 'stackstate.service.id' attribute.", nil))
 	}
@@ -180,8 +180,8 @@ func (m *ServiceStatusCheckAction) Prepare(_ context.Context, state *ServiceStat
 	}
 
 	state.ServiceId = serviceId[0]
-	state.ServiceName = request.Target.Attributes["k8s.service.name"][0]
-	state.ClusterName = request.Target.Attributes["k8s.cluster-name"][0]
+	state.ServiceName = request.Target.Attributes[attributeK8ServiceName][0]
+	state.ClusterName = request.Target.Attributes[attributeK8ClusterName][0]
 	state.End = end
 	state.ExpectedStatus = expectedStatus
 	state.StatusCheckMode = statusCheckMode
@@ -286,11 +286,11 @@ func toMetric(service *Component, now time.Time) *action_kit_api.Metric {
 	return extutil.Ptr(action_kit_api.Metric{
 		Name: extutil.Ptr("stackstate_service_status"),
 		Metric: map[string]string{
-			"stackstate.service.id": strconv.Itoa(service.Id),
-			"k8s.service.name":      service.Name,
-			"state":                 state,
-			"tooltip":               tooltip,
-			"url":                   fmt.Sprintf("%s/#/components/%s", uiBaseUrl, url.QueryEscape(service.Identifiers[0])),
+			attributeServiceId:     strconv.Itoa(service.Id),
+			attributeK8ServiceName: service.Name,
+			attributeState:         state,
+			attributeTooltip:       tooltip,
+			attributeUrl:           fmt.Sprintf("%s/#/components/%s", uiBaseUrl, url.QueryEscape(service.Identifiers[0])),
 		},
 		Timestamp: now,
 		Value:     0,

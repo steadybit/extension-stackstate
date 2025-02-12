@@ -59,13 +59,13 @@ func (d *serviceDiscovery) DescribeTarget() discovery_kit_api.TargetDescription 
 		Icon:     extutil.Ptr(serviceIcon),
 		Table: discovery_kit_api.Table{
 			Columns: []discovery_kit_api.Column{
-				{Attribute: "k8s.service.name"},
-				{Attribute: "k8s.namespace"},
-				{Attribute: "k8s.cluster-name"},
+				{Attribute: attributeK8ServiceName},
+				{Attribute: attributeK8Namespace},
+				{Attribute: attributeK8ClusterName},
 			},
 			OrderBy: []discovery_kit_api.OrderBy{
 				{
-					Attribute: "k8s.service.name",
+					Attribute: attributeK8ServiceName,
 					Direction: "ASC",
 				},
 			},
@@ -76,19 +76,19 @@ func (d *serviceDiscovery) DescribeTarget() discovery_kit_api.TargetDescription 
 func (d *serviceDiscovery) DescribeAttributes() []discovery_kit_api.AttributeDescription {
 	return []discovery_kit_api.AttributeDescription{
 		{
-			Attribute: "k8s.service.name",
+			Attribute: attributeK8ServiceName,
 			Label: discovery_kit_api.PluralLabel{
 				One:   "Service",
 				Other: "Services",
 			},
 		}, {
-			Attribute: "k8s.namespace",
+			Attribute: attributeK8Namespace,
 			Label: discovery_kit_api.PluralLabel{
 				One:   "Namespace name",
 				Other: "Namespace names",
 			},
 		}, {
-			Attribute: "k8s.cluster-name",
+			Attribute: attributeK8ClusterName,
 			Label: discovery_kit_api.PluralLabel{
 				One:   "Cluster name",
 				Other: "Cluster names",
@@ -135,10 +135,10 @@ func toService(service Component) discovery_kit_api.Target {
 		Label:      service.Name,
 		TargetType: serviceTargetType,
 		Attributes: map[string][]string{
-			"k8s.service.name":      {service.Name},
-			"stackstate.service.id": {strconv.Itoa(service.Id)},
-			"k8s.namespace":         {namespace},
-			"k8s.cluster-name":      {clusterName},
+			attributeServiceId:     {strconv.Itoa(service.Id)},
+			attributeK8ServiceName: {service.Name},
+			attributeK8Namespace:   {namespace},
+			attributeK8ClusterName: {clusterName},
 		},
 	}
 }

@@ -5,7 +5,7 @@
 ##
 FROM --platform=$BUILDPLATFORM golang:1.23-alpine AS build
 
-ARG TARGETOS TARGETARCH
+ARG TARGETOS=TARGETARCH
 ARG NAME
 ARG VERSION
 ARG REVISION
@@ -21,7 +21,7 @@ RUN go mod download
 
 COPY . .
 
-RUN GOOS=$TARGETOS GOARCH=$TARGETARCH go build \
+RUN GOOS="$TARGETOS" GOARCH="$TARGETARCH" go build \
     -ldflags="\
     -X 'github.com/steadybit/extension-kit/extbuild.ExtensionName=${NAME}' \
     -X 'github.com/steadybit/extension-kit/extbuild.Version=${VERSION}' \
@@ -40,7 +40,7 @@ LABEL "steadybit.com.discovery-disabled"="true"
 ARG USERNAME=steadybit
 ARG USER_UID=10000
 
-RUN adduser -u $USER_UID -D $USERNAME
+RUN adduser -u "$USER_UID" -D "$USERNAME"
 
 USER $USER_UID
 
