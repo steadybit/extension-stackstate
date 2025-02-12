@@ -5,7 +5,8 @@
 ##
 FROM --platform=$BUILDPLATFORM golang:1.23-alpine AS build
 
-ARG TARGETOS=TARGETARCH
+ARG TARGETOS
+ARG TARGETARCH
 ARG NAME
 ARG VERSION
 ARG REVISION
@@ -21,7 +22,7 @@ RUN go mod download
 
 COPY . .
 
-RUN GOOS="$TARGETOS" GOARCH="$TARGETARCH" go build \
+RUN GOOS="${TARGETOS}" GOARCH="${TARGETARCH}" go build \
     -ldflags="\
     -X 'github.com/steadybit/extension-kit/extbuild.ExtensionName=${NAME}' \
     -X 'github.com/steadybit/extension-kit/extbuild.Version=${VERSION}' \
