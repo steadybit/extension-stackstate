@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.15 (next release)
+
+- Update dependencies
+
 ## v1.0.14
 
 - Provide service status check mode to verify if the given state was observed at least once or all the time.
