@@ -10,6 +10,10 @@ package extservice
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strconv"
+	"time"
+
 	"github.com/go-resty/resty/v2"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
@@ -18,9 +22,6 @@ import (
 	"github.com/steadybit/extension-kit/extbuild"
 	"github.com/steadybit/extension-kit/extutil"
 	"github.com/steadybit/extension-stackstate/config"
-	"net/url"
-	"strconv"
-	"time"
 )
 
 type ServiceStatusCheckAction struct{}
@@ -71,8 +72,8 @@ func (m *ServiceStatusCheckAction) Describe() action_kit_api.ActionDescription {
 				},
 			}),
 		}),
-		Technology:  extutil.Ptr("StackState"),
-		Category:    extutil.Ptr("StackState"), //Can be removed in Q1/24 - support for backward compatibility of old sidebar
+		Technology: extutil.Ptr("StackState"),
+
 		Kind:        action_kit_api.Check,
 		TimeControl: action_kit_api.TimeControlInternal,
 		Parameters: []action_kit_api.ActionParameter{
