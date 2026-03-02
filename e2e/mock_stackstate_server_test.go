@@ -6,12 +6,14 @@ package e2e
 
 import (
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"github.com/steadybit/extension-kit/exthttp"
-	"github.com/steadybit/extension-stackstate/extservice"
 	"net"
 	"net/http"
 	"net/http/httptest"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+	"github.com/steadybit/extension-kit/exthttp"
+	"github.com/steadybit/extension-stackstate/extservice"
 )
 
 type mockServer struct {
@@ -36,7 +38,7 @@ func createMockStackstateServer() *mockServer {
 }
 
 func handler[T any](getter func() T) http.Handler {
-	return exthttp.PanicRecovery(exthttp.LogRequest(exthttp.GetterAsHandler(getter)))
+	return exthttp.PanicRecovery(exthttp.LogRequestWithDefaultLogLevel(exthttp.GetterAsHandler(getter), zerolog.DebugLevel))
 }
 
 func (m *mockServer) viewSnapshot() extservice.ViewSnapshotResponseWrapper {
