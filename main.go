@@ -5,6 +5,8 @@
 package main
 
 import (
+	"time"
+
 	_ "github.com/KimMachineGun/automemlimit" // By default, it sets `GOMEMLIMIT` to 90% of cgroup's memory limit.
 	"github.com/go-resty/resty/v2"
 	"github.com/rs/zerolog"
@@ -22,6 +24,8 @@ import (
 	"github.com/steadybit/extension-stackstate/extservice"
 )
 
+var startedAt = time.Now().Format(time.RFC3339)
+
 func main() {
 	extlogging.InitZeroLog()
 
@@ -35,10 +39,10 @@ func main() {
 	config.ValidateConfiguration()
 	initStackStateHttpClient()
 
-	exthttp.RegisterHttpHandler("/", exthttp.GetterAsHandler(getExtensionList))
-
 	discovery_kit_sdk.Register(extservice.NewServiceDiscovery())
 	action_kit_sdk.RegisterAction(extservice.NewServiceStatusCheckAction())
+
+	exthttp.RegisterHttpHandler("/", exthttp.IfNoneMatchHandler(func() string { return startedAt }, exthttp.GetterAsHandler(getExtensionList)))
 
 	extsignals.ActivateSignalHandlers()
 
