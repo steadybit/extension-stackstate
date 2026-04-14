@@ -60,19 +60,19 @@ func (m *ServiceStatusCheckAction) Describe() action_kit_api.ActionDescription {
 		Label:       "StackState Service",
 		Description: "collects information about the service status and optionally verifies that the status has an expected status.",
 		Version:     extbuild.GetSemverVersionStringOrUnknown(),
-		Icon:        extutil.Ptr(serviceIcon),
-		TargetSelection: extutil.Ptr(action_kit_api.TargetSelection{
+		Icon:        new(serviceIcon),
+		TargetSelection: new(action_kit_api.TargetSelection{
 			TargetType:          serviceTargetType,
 			QuantityRestriction: extutil.Ptr(action_kit_api.QuantityRestrictionAll),
-			SelectionTemplates: extutil.Ptr([]action_kit_api.TargetSelectionTemplate{
+			SelectionTemplates: new([]action_kit_api.TargetSelectionTemplate{
 				{
 					Label:       "service name",
-					Description: extutil.Ptr("Find service by cluster, namespace and service"),
+					Description: new("Find service by cluster, namespace and service"),
 					Query:       "k8s.cluster-name=\"\" AND k8s.namespace=\"\" AND k8s.service.name=\"\"",
 				},
 			}),
 		}),
-		Technology: extutil.Ptr("StackState"),
+		Technology: new("StackState"),
 
 		Kind:        action_kit_api.Check,
 		TimeControl: action_kit_api.TimeControlInternal,
@@ -80,18 +80,18 @@ func (m *ServiceStatusCheckAction) Describe() action_kit_api.ActionDescription {
 			{
 				Name:         "duration",
 				Label:        "Duration",
-				Description:  extutil.Ptr(""),
+				Description:  new(""),
 				Type:         action_kit_api.ActionParameterTypeDuration,
-				DefaultValue: extutil.Ptr("30s"),
-				Order:        extutil.Ptr(1),
-				Required:     extutil.Ptr(true),
+				DefaultValue: new("30s"),
+				Order:        new(1),
+				Required:     new(true),
 			},
 			{
 				Name:        "expectedStatus",
 				Label:       "Expected Status",
-				Description: extutil.Ptr(""),
+				Description: new(""),
 				Type:        action_kit_api.ActionParameterTypeString,
-				Options: extutil.Ptr([]action_kit_api.ParameterOption{
+				Options: new([]action_kit_api.ParameterOption{
 					action_kit_api.ExplicitParameterOption{
 						Label: "CLEAR",
 						Value: "CLEAR",
@@ -109,16 +109,16 @@ func (m *ServiceStatusCheckAction) Describe() action_kit_api.ActionDescription {
 						Value: "UNKNOWN",
 					},
 				}),
-				Required: extutil.Ptr(false),
-				Order:    extutil.Ptr(2),
+				Required: new(false),
+				Order:    new(2),
 			},
 			{
 				Name:         "statusCheckMode",
 				Label:        "Status Check Mode",
-				Description:  extutil.Ptr("How often should the status be expected?"),
+				Description:  new("How often should the status be expected?"),
 				Type:         action_kit_api.ActionParameterTypeString,
-				DefaultValue: extutil.Ptr(statusCheckModeAllTheTime),
-				Options: extutil.Ptr([]action_kit_api.ParameterOption{
+				DefaultValue: new(statusCheckModeAllTheTime),
+				Options: new([]action_kit_api.ParameterOption{
 					action_kit_api.ExplicitParameterOption{
 						Label: "All the time",
 						Value: statusCheckModeAllTheTime,
@@ -128,11 +128,11 @@ func (m *ServiceStatusCheckAction) Describe() action_kit_api.ActionDescription {
 						Value: statusCheckModeAtLeastOnce,
 					},
 				}),
-				Required: extutil.Ptr(true),
-				Order:    extutil.Ptr(4),
+				Required: new(true),
+				Order:    new(4),
 			},
 		},
-		Widgets: extutil.Ptr([]action_kit_api.Widget{
+		Widgets: new([]action_kit_api.Widget{
 			action_kit_api.StateOverTimeWidget{
 				Type:  action_kit_api.ComSteadybitWidgetStateOverTime,
 				Title: "StackState Service Status",
@@ -148,16 +148,16 @@ func (m *ServiceStatusCheckAction) Describe() action_kit_api.ActionDescription {
 				Tooltip: action_kit_api.StateOverTimeWidgetTooltipConfig{
 					From: attributeTooltip,
 				},
-				Url: extutil.Ptr(action_kit_api.StateOverTimeWidgetUrlConfig{
-					From: extutil.Ptr(attributeUrl),
+				Url: new(action_kit_api.StateOverTimeWidgetUrlConfig{
+					From: new(attributeUrl),
 				}),
-				Value: extutil.Ptr(action_kit_api.StateOverTimeWidgetValueConfig{
-					Hide: extutil.Ptr(true),
+				Value: new(action_kit_api.StateOverTimeWidgetValueConfig{
+					Hide: new(true),
 				}),
 			},
 		}),
-		Status: extutil.Ptr(action_kit_api.MutatingEndpointReferenceWithCallInterval{
-			CallInterval: extutil.Ptr("1s"),
+		Status: new(action_kit_api.MutatingEndpointReferenceWithCallInterval{
+			CallInterval: new("1s"),
 		}),
 	}
 }
@@ -165,7 +165,7 @@ func (m *ServiceStatusCheckAction) Describe() action_kit_api.ActionDescription {
 func (m *ServiceStatusCheckAction) Prepare(_ context.Context, state *ServiceStatusCheckState, request action_kit_api.PrepareActionRequestBody) (*action_kit_api.PrepareResult, error) {
 	serviceId := request.Target.Attributes[attributeServiceId]
 	if len(serviceId) == 0 {
-		return nil, extutil.Ptr(extension_kit.ToError("Target is missing the 'stackstate.service.id' attribute.", nil))
+		return nil, new(extension_kit.ToError("Target is missing the 'stackstate.service.id' attribute.", nil))
 	}
 
 	duration := request.Config["duration"].(float64)
@@ -211,7 +211,7 @@ func MonitorStatusCheckStatus(ctx context.Context, state *ServiceStatusCheckStat
 	if len(state.ExpectedStatus) > 0 {
 		componentHealthState := component.State.HealthState
 		if state.StatusCheckMode == statusCheckModeAllTheTime && componentHealthState != state.ExpectedStatus {
-			checkError = extutil.Ptr(action_kit_api.ActionKitError{
+			checkError = new(action_kit_api.ActionKitError{
 				Title: fmt.Sprintf("Service '%s' (id %s) has status '%s' whereas '%s' is expected.",
 					component.Name,
 					state.ServiceId,
@@ -224,7 +224,7 @@ func MonitorStatusCheckStatus(ctx context.Context, state *ServiceStatusCheckStat
 				state.StatusCheckSuccess = true
 			}
 			if completed && !state.StatusCheckSuccess {
-				checkError = extutil.Ptr(action_kit_api.ActionKitError{
+				checkError = new(action_kit_api.ActionKitError{
 					Title: fmt.Sprintf("Service '%s' (id %s) didn't have status '%s' at least once.",
 						component.Name,
 						state.ServiceId,
@@ -247,13 +247,13 @@ func MonitorStatusCheckStatus(ctx context.Context, state *ServiceStatusCheckStat
 func loadServiceComponent(ctx context.Context, state *ServiceStatusCheckState, api GetSnapshotApi) (*Component, error) {
 	res, stackStateResponse, err := api.GetServiceSnapshot(ctx, state.ServiceId)
 	if err != nil {
-		return nil, extutil.Ptr(extension_kit.ToError(fmt.Sprintf("Failed to retrieve service states from StackState for Service ID %s. Full response: %v", state.ServiceId, res.String()), err))
+		return nil, new(extension_kit.ToError(fmt.Sprintf("Failed to retrieve service states from StackState for Service ID %s. Full response: %v", state.ServiceId, res.String()), err))
 	}
 	if !res.IsSuccess() {
 		log.Err(err).Msgf("StackState API responded with unexpected status code %d while retrieving service states for Service ID %s. Full response: %v", res.StatusCode(), state.ServiceId, res.String())
 		serviceIdInt, parseErr := strconv.Atoi(state.ServiceId)
 		if parseErr != nil {
-			return nil, extutil.Ptr(extension_kit.ToError(fmt.Sprintf("Failed to parse int %s", state.ServiceId), parseErr))
+			return nil, new(extension_kit.ToError(fmt.Sprintf("Failed to parse int %s", state.ServiceId), parseErr))
 		}
 		return &Component{
 			Id:   serviceIdInt,
@@ -284,8 +284,8 @@ func toMetric(service *Component, now time.Time) *action_kit_api.Metric {
 
 	uiBaseUrl := config.Config.ApiBaseUrl[:(len(config.Config.ApiBaseUrl) - 3)]
 
-	return extutil.Ptr(action_kit_api.Metric{
-		Name: extutil.Ptr("stackstate_service_status"),
+	return new(action_kit_api.Metric{
+		Name: new("stackstate_service_status"),
 		Metric: map[string]string{
 			attributeServiceId:     strconv.Itoa(service.Id),
 			attributeK8ServiceName: service.Name,
