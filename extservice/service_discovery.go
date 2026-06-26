@@ -107,7 +107,7 @@ func getAllServices(ctx context.Context, api GetSnapshotsApi) []discovery_kit_ap
 	res, stackStateResponse, err := api.GetServiceSnapshots(ctx)
 
 	if err != nil {
-		log.Err(err).Msgf("Failed to retrieve service states from Stack State. Full response: %v", res.String())
+		log.Err(err).Msgf("Failed to retrieve service states from Stack State.")
 		return result
 	}
 
