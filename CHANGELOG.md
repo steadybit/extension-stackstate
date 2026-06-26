@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- fix: escape the service id used in the StackState snapshot query and build the request body with a JSON encoder, preventing STQL/JSON query injection
+- fix: guard the service check and discovery against missing components, identifiers, short base URLs and unexpected identifier formats instead of panicking, and avoid a possible nil-dereference when a StackState request fails before a response is received
+
 ## v1.0.27
 
 - chore(deps): bump github.com/steadybit/extension-kit

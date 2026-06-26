@@ -5,6 +5,7 @@ package extservice
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/go-resty/resty/v2"
 )
@@ -31,17 +32,30 @@ type StackStateHttpClient struct {
 }
 
 func (s *StackStateHttpClient) GetServiceSnapshot(ctx context.Context, serviceId string) (*resty.Response, ViewSnapshotResponseWrapper, error) {
-	return s.executeSnapshotQuery(ctx, fmt.Sprintf("(id = \\\"%s\\\")", serviceId))
+	return s.executeSnapshotQuery(ctx, fmt.Sprintf("(id = %s)", stqlString(serviceId)))
 }
 
 func (s *StackStateHttpClient) GetServiceSnapshots(ctx context.Context) (*resty.Response, ViewSnapshotResponseWrapper, error) {
-	return s.executeSnapshotQuery(ctx, "(type = \\\"service\\\")")
+	return s.executeSnapshotQuery(ctx, `(type = "service")`)
+}
+
+// stqlString renders a value as a quoted, escaped string literal using JSON string escaping,
+// which escapes the quotes and backslashes that could otherwise let the value break out of an
+// STQL string literal and inject into the query.
+func stqlString(value string) string {
+	encoded, _ := json.Marshal(value)
+	return string(encoded)
 }
 
 func (s *StackStateHttpClient) executeSnapshotQuery(ctx context.Context, query string) (*resty.Response, ViewSnapshotResponseWrapper, error) {
+	// Encode the query as a JSON string so it is correctly escaped inside the request body.
+	queryJSON, err := json.Marshal(query)
+	if err != nil {
+		return nil, ViewSnapshotResponseWrapper{}, err
+	}
 	requestBody := fmt.Sprintf(`{
     "_type": "ViewSnapshotRequest",
-    "query": "%v",
+    "query": %s,
     "queryVersion": "0.0.1",
     "metadata": {
         "_type": "QueryMetadata",
@@ -57,7 +71,7 @@ func (s *StackStateHttpClient) executeSnapshotQuery(ctx context.Context, query s
         "neighboringComponents": false,
         "showFullComponent": false
     }
-  }`, query)
+  }`, queryJSON)
 	var stackStateResponse ViewSnapshotResponseWrapper
 	response, err := s.Client.R().
 		SetContext(ctx).

@@ -247,7 +247,7 @@ func MonitorStatusCheckStatus(ctx context.Context, state *ServiceStatusCheckStat
 func loadServiceComponent(ctx context.Context, state *ServiceStatusCheckState, api GetSnapshotApi) (*Component, error) {
 	res, stackStateResponse, err := api.GetServiceSnapshot(ctx, state.ServiceId)
 	if err != nil {
-		return nil, new(extension_kit.ToError(fmt.Sprintf("Failed to retrieve service states from StackState for Service ID %s. Full response: %v", state.ServiceId, res.String()), err))
+		return nil, new(extension_kit.ToError(fmt.Sprintf("Failed to retrieve service states from StackState for Service ID %s.", state.ServiceId), err))
 	}
 	if !res.IsSuccess() {
 		log.Err(err).Msgf("StackState API responded with unexpected status code %d while retrieving service states for Service ID %s. Full response: %v", res.StatusCode(), state.ServiceId, res.String())
@@ -263,6 +263,9 @@ func loadServiceComponent(ctx context.Context, state *ServiceStatusCheckState, a
 			},
 			Identifiers: []string{fmt.Sprintf("urn:service:/%s:%s:%s", state.ClusterName, state.ServiceName, state.ServiceId)},
 		}, nil
+	}
+	if len(stackStateResponse.ViewSnapshotResponse.Components) == 0 {
+		return nil, new(extension_kit.ToError(fmt.Sprintf("StackState returned no components for Service ID %s.", state.ServiceId), nil))
 	}
 	return &stackStateResponse.ViewSnapshotResponse.Components[0], nil
 }
@@ -282,7 +285,15 @@ func toMetric(service *Component, now time.Time) *action_kit_api.Metric {
 		state = "danger"
 	}
 
-	uiBaseUrl := config.Config.ApiBaseUrl[:(len(config.Config.ApiBaseUrl) - 3)]
+	uiBaseUrl := config.Config.ApiBaseUrl
+	if len(uiBaseUrl) >= 3 {
+		uiBaseUrl = uiBaseUrl[:len(uiBaseUrl)-3]
+	}
+
+	serviceUrl := ""
+	if len(service.Identifiers) > 0 {
+		serviceUrl = fmt.Sprintf("%s/#/components/%s", uiBaseUrl, url.QueryEscape(service.Identifiers[0]))
+	}
 
 	return new(action_kit_api.Metric{
 		Name: new("stackstate_service_status"),
@@ -291,7 +302,7 @@ func toMetric(service *Component, now time.Time) *action_kit_api.Metric {
 			attributeK8ServiceName: service.Name,
 			attributeState:         state,
 			attributeTooltip:       tooltip,
-			attributeUrl:           fmt.Sprintf("%s/#/components/%s", uiBaseUrl, url.QueryEscape(service.Identifiers[0])),
+			attributeUrl:           serviceUrl,
 		},
 		Timestamp: now,
 		Value:     0,
