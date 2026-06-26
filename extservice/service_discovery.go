@@ -10,6 +10,8 @@ package extservice
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/go-resty/resty/v2"
 	"github.com/rs/zerolog/log"
 	"github.com/steadybit/discovery-kit/go/discovery_kit_api"
@@ -127,8 +129,8 @@ func getAllServices(ctx context.Context, api GetSnapshotsApi) []discovery_kit_ap
 }
 
 func toService(service Component) discovery_kit_api.Target {
-	clusterName := service.Properties.ClusterNameIdentifier[len("urn:cluster:/kubernetes:"):]
-	namespace := service.Properties.NamespaceIdentifier[len(fmt.Sprintf("urn:kubernetes:/%v:namespace/", clusterName)):]
+	clusterName := strings.TrimPrefix(service.Properties.ClusterNameIdentifier, "urn:cluster:/kubernetes:")
+	namespace := strings.TrimPrefix(service.Properties.NamespaceIdentifier, fmt.Sprintf("urn:kubernetes:/%v:namespace/", clusterName))
 	return discovery_kit_api.Target{
 		Id:         strconv.Itoa(service.Id),
 		Label:      service.Name,
