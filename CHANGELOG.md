@@ -1,9 +1,15 @@
 # Changelog
 
-## Unreleased
+## v1.0.28
 
+- chore(deps): bump github.com/steadybit/action-kit/go/action_kit_sdk
+- chore(deps): bump github.com/steadybit/discovery-kit/go/discovery_kit_sdk
+- chore(deps): bump github.com/steadybit/extension-kit
+- chore: add Claude Code workflows (#144)
+- chore: silence SonarQube finding on secrets: inherit in Claude workflows
 - fix: escape the service id used in the StackState snapshot query and build the request body with a JSON encoder, preventing STQL/JSON query injection
 - fix: guard the service check and discovery against missing components, identifiers, short base URLs and unexpected identifier formats instead of panicking, and avoid a possible nil-dereference when a StackState request fails before a response is received
+- fix: prevent STQL injection and reachable panics in service check/discovery (#145)
 
 ## v1.0.27
 
