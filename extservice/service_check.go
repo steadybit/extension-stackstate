@@ -40,6 +40,10 @@ type ServiceStatusCheckState struct {
 	ExpectedStatus     string
 	StatusCheckMode    string
 	StatusCheckSuccess bool
+	FailEarly          bool
+	// DeviationTitle remembers the first observed deviation in 'All the time' + fail-at-end mode
+	// (FailEarly = false) so it can be reported once the step ends.
+	DeviationTitle string
 }
 
 type GetSnapshotApi interface {
@@ -131,6 +135,16 @@ func (m *ServiceStatusCheckAction) Describe() action_kit_api.ActionDescription {
 				Required: new(true),
 				Order:    new(4),
 			},
+			{
+				Name:         "failEarly",
+				Label:        "Fail early",
+				Description:  new("If enabled, the check fails as soon as a deviating status is observed. If disabled, the check keeps collecting events for the whole duration and only fails at the end of the step. Only affects the 'All the time' mode; 'At least once' can only be evaluated at the end of the step."),
+				Type:         action_kit_api.ActionParameterTypeBoolean,
+				DefaultValue: new("true"),
+				Advanced:     new(true),
+				Required:     new(false),
+				Order:        new(5),
+			},
 		},
 		Widgets: new([]action_kit_api.Widget{
 			action_kit_api.StateOverTimeWidget{
@@ -187,6 +201,11 @@ func (m *ServiceStatusCheckAction) Prepare(_ context.Context, state *ServiceStat
 	state.ExpectedStatus = expectedStatus
 	state.StatusCheckMode = statusCheckMode
 	state.StatusCheckSuccess = state.StatusCheckMode == statusCheckModeAllTheTime
+	// Default to failing early to preserve the previous behavior for experiments that don't set this parameter.
+	state.FailEarly = true
+	if request.Config["failEarly"] != nil {
+		state.FailEarly = extutil.ToBool(request.Config["failEarly"])
+	}
 
 	return nil, nil
 }
@@ -210,15 +229,33 @@ func MonitorStatusCheckStatus(ctx context.Context, state *ServiceStatusCheckStat
 	var checkError *action_kit_api.ActionKitError
 	if len(state.ExpectedStatus) > 0 {
 		componentHealthState := component.State.HealthState
-		if state.StatusCheckMode == statusCheckModeAllTheTime && componentHealthState != state.ExpectedStatus {
-			checkError = new(action_kit_api.ActionKitError{
-				Title: fmt.Sprintf("Service '%s' (id %s) has status '%s' whereas '%s' is expected.",
-					component.Name,
-					state.ServiceId,
-					componentHealthState,
-					state.ExpectedStatus),
-				Status: extutil.Ptr(action_kit_api.Failed),
-			})
+		if state.StatusCheckMode == statusCheckModeAllTheTime {
+			if componentHealthState != state.ExpectedStatus {
+				if state.FailEarly {
+					// Fail as soon as a deviating status is observed (present tense - it is deviating now).
+					checkError = new(action_kit_api.ActionKitError{
+						Title: fmt.Sprintf("Service '%s' (id %s) has status '%s' whereas '%s' is expected.",
+							component.Name,
+							state.ServiceId,
+							componentHealthState,
+							state.ExpectedStatus),
+						Status: extutil.Ptr(action_kit_api.Failed),
+					})
+				} else if state.DeviationTitle == "" {
+					// Remember the first deviation to report at the end (past tense - it may have recovered).
+					state.DeviationTitle = fmt.Sprintf("Service '%s' (id %s) had status '%s' whereas '%s' is expected.",
+						component.Name,
+						state.ServiceId,
+						componentHealthState,
+						state.ExpectedStatus)
+				}
+			}
+			if !state.FailEarly && completed && state.DeviationTitle != "" {
+				checkError = new(action_kit_api.ActionKitError{
+					Title:  state.DeviationTitle,
+					Status: extutil.Ptr(action_kit_api.Failed),
+				})
+			}
 		} else if state.StatusCheckMode == statusCheckModeAtLeastOnce {
 			if componentHealthState == state.ExpectedStatus {
 				state.StatusCheckSuccess = true

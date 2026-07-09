@@ -155,6 +155,28 @@ func TestServiceCheck(t *testing.T) {
 		require.Equal(t, (*status.Metrics)[0].Metric["state"], "warn")
 	})
 
+	t.Run("status allTheTime fail at end", func(t *testing.T) {
+		state := serviceCheckState(statusCheckModeAllTheTime)
+		state.FailEarly = false
+		mockedApi := new(getSnapshotApiMock)
+		mockedApi.On("GetServiceSnapshot", mock.Anything, mock.Anything).Return(apiResponseWithStatus(200), serviceResponseWithState("DEVIATING"), nil)
+
+		// Deviation observed but time not up: must not fail early, deviation is remembered.
+		status, err := MonitorStatusCheckStatus(context.TODO(), &state, mockedApi)
+		require.NoError(t, err)
+		require.False(t, status.Completed)
+		require.Nil(t, status.Error)
+		require.NotEmpty(t, state.DeviationTitle)
+
+		// Time is up: the remembered deviation is reported with the past-tense message.
+		state.End = time.Now().Add(-1 * time.Hour)
+		status, err = MonitorStatusCheckStatus(context.TODO(), &state, mockedApi)
+		require.NoError(t, err)
+		require.True(t, status.Completed)
+		require.NotNil(t, status.Error)
+		require.Contains(t, status.Error.Title, "had status")
+	})
+
 	t.Run("status atLeastOnce success", func(t *testing.T) {
 		state := serviceCheckState(statusCheckModeAtLeastOnce)
 		response := apiResponseWithStatus(200)
@@ -247,6 +269,7 @@ func serviceCheckState(mode string) ServiceStatusCheckState {
 	state.ExpectedStatus = "CLEAR"
 	state.StatusCheckMode = mode
 	state.StatusCheckSuccess = mode == statusCheckModeAllTheTime
+	state.FailEarly = true // matches the production default; 'All the time' fails fast
 	state.End = time.Now().Add(1 * time.Hour)
 	return state
 }
