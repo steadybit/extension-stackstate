@@ -62,37 +62,98 @@ func TestWithMinikube(t *testing.T) {
 			Name: "service check errors",
 			Test: testServiceCheck(server, "STATUS-500", "CLEAR", action_kit_api.Failed),
 		},
+		{
+			Name: "service check fails early by default",
+			Test: testServiceCheckFailsEarlyByDefault(server),
+		},
+		{
+			Name: "service check with fail early disabled fails at the end despite recovery",
+			Test: testServiceCheckFailEarlyDisabledFailsAtEnd(server),
+		},
+		{
+			Name: "service check at least once is not affected by fail early",
+			Test: testServiceCheckAtLeastOnceIgnoresFailEarly(server),
+		},
 	})
 }
 
+type serviceCheckConfig struct {
+	Duration        int    `json:"duration"`
+	ExpectedStatus  string `json:"expectedStatus"`
+	StatusCheckMode string `json:"statusCheckMode,omitempty"`
+	FailEarly       *bool  `json:"failEarly,omitempty"`
+}
+
+func serviceCheckTarget() *action_kit_api.Target {
+	return &action_kit_api.Target{
+		Name: "111",
+		Attributes: map[string][]string{
+			"stackstate.service.id": {"111"},
+			"k8s.service.name":      {"eins-oelf"},
+			"k8s.cluster-name":      {"cluster-eins-elf"},
+			"k8s.namespace":         {"namespace-eins-elf"},
+		},
+	}
+}
+
+func runServiceCheck(t *testing.T, e *e2e.Extension, config serviceCheckConfig) (error, time.Duration) {
+	t.Helper()
+	start := time.Now()
+	action, err := e.RunAction("com.steadybit.extension_stackstate.service.check", serviceCheckTarget(), config, &action_kit_api.ExecutionContext{})
+	require.NoError(t, err)
+	defer func() { _ = action.Cancel() }()
+	return action.Wait(), time.Since(start)
+}
+
 func testServiceCheck(server *mockServer, status, expectedStatus string, wantedActionStatus action_kit_api.ActionKitErrorStatus) func(t *testing.T, minikube *e2e.Minikube, e *e2e.Extension) {
-	return func(t *testing.T, minikube *e2e.Minikube, e *e2e.Extension) {
-		target := &action_kit_api.Target{
-			Name: "111",
-			Attributes: map[string][]string{
-				"stackstate.service.id": {"111"},
-				"k8s.service.name":      {"eins-oelf"},
-				"k8s.cluster-name":      {"cluster-eins-elf"},
-				"k8s.namespace":         {"namespace-eins-elf"},
-			},
-		}
-
-		config := struct {
-			Duration       int    `json:"duration"`
-			ExpectedStatus string `json:"expectedStatus"`
-		}{Duration: 5_000, ExpectedStatus: expectedStatus}
-
-		server.state = status
-		action, err := e.RunAction("com.steadybit.extension_stackstate.service.check", target, config, &action_kit_api.ExecutionContext{})
-		require.NoError(t, err)
-		defer func() { _ = action.Cancel() }()
-
-		err = action.Wait()
+	return func(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
+		server.setState(status)
+		err, _ := runServiceCheck(t, e, serviceCheckConfig{Duration: 5_000, ExpectedStatus: expectedStatus})
 		if wantedActionStatus == "" {
 			require.NoError(t, err)
 		} else {
 			require.ErrorContains(t, err, fmt.Sprintf("[%s]", wantedActionStatus))
 		}
+	}
+}
+
+func testServiceCheckFailsEarlyByDefault(server *mockServer) func(t *testing.T, minikube *e2e.Minikube, e *e2e.Extension) {
+	return func(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
+		server.setState("DEVIATING")
+
+		err, elapsed := runServiceCheck(t, e, serviceCheckConfig{Duration: 10_000, ExpectedStatus: "CLEAR"})
+
+		require.ErrorContains(t, err, "has status 'DEVIATING'")
+		require.Less(t, elapsed, 8*time.Second, "check with failEarly unset must fail on the first deviating status, well before the step duration")
+	}
+}
+
+func testServiceCheckFailEarlyDisabledFailsAtEnd(server *mockServer) func(t *testing.T, minikube *e2e.Minikube, e *e2e.Extension) {
+	return func(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
+		server.setState("DEVIATING")
+		// The service recovers mid-run; the check must still report the past deviation at the end.
+		timer := time.AfterFunc(2500*time.Millisecond, func() { server.setState("CLEAR") })
+		defer timer.Stop()
+
+		failEarly := false
+		err, elapsed := runServiceCheck(t, e, serviceCheckConfig{Duration: 6_000, ExpectedStatus: "CLEAR", FailEarly: &failEarly})
+
+		require.ErrorContains(t, err, "had status 'DEVIATING'")
+		require.GreaterOrEqual(t, elapsed, 6*time.Second, "check with failEarly disabled must run for the whole step duration")
+	}
+}
+
+func testServiceCheckAtLeastOnceIgnoresFailEarly(server *mockServer) func(t *testing.T, minikube *e2e.Minikube, e *e2e.Extension) {
+	return func(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
+		server.setState("DEVIATING")
+		// The expected status only appears mid-run: failEarly must not make 'at least once' fail beforehand.
+		timer := time.AfterFunc(2500*time.Millisecond, func() { server.setState("CLEAR") })
+		defer timer.Stop()
+
+		failEarly := true
+		err, _ := runServiceCheck(t, e, serviceCheckConfig{Duration: 6_000, ExpectedStatus: "CLEAR", StatusCheckMode: "atLeastOnce", FailEarly: &failEarly})
+
+		require.NoError(t, err)
 	}
 }
 

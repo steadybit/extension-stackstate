@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -17,8 +18,21 @@ import (
 )
 
 type mockServer struct {
-	http  *httptest.Server
-	state string
+	http    *httptest.Server
+	stateMu sync.RWMutex
+	state   string
+}
+
+func (m *mockServer) setState(state string) {
+	m.stateMu.Lock()
+	defer m.stateMu.Unlock()
+	m.state = state
+}
+
+func (m *mockServer) getState() string {
+	m.stateMu.RLock()
+	defer m.stateMu.RUnlock()
+	return m.state
 }
 
 func createMockStackstateServer() *mockServer {
@@ -42,7 +56,8 @@ func handler[T any](getter func() T) http.Handler {
 }
 
 func (m *mockServer) viewSnapshot() extservice.ViewSnapshotResponseWrapper {
-	if m.state == "STATUS-500" {
+	state := m.getState()
+	if state == "STATUS-500" {
 		panic("status 500")
 	}
 	return extservice.ViewSnapshotResponseWrapper{
@@ -57,7 +72,7 @@ func (m *mockServer) viewSnapshot() extservice.ViewSnapshotResponseWrapper {
 						NamespaceIdentifier:   "urn:kubernetes:/cluster-eins-elf:namespace/namespace-eins-elf",
 					},
 					State: extservice.State{
-						HealthState: m.state,
+						HealthState: state,
 					},
 				},
 				{
@@ -69,7 +84,7 @@ func (m *mockServer) viewSnapshot() extservice.ViewSnapshotResponseWrapper {
 						NamespaceIdentifier:   "urn:kubernetes:/cluster-droelf-zehn:namespace/namespace-droelf-zehn",
 					},
 					State: extservice.State{
-						HealthState: m.state,
+						HealthState: state,
 					},
 				},
 			},

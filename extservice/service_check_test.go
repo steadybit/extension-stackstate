@@ -3,6 +3,7 @@ package extservice
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/go-resty/resty/v2"
 	"github.com/steadybit/action-kit/go/action_kit_api/v2"
 	"github.com/steadybit/extension-kit/extutil"
@@ -259,6 +260,145 @@ func TestServiceCheck(t *testing.T) {
 		require.Error(t, err)
 		require.Nil(t, status)
 	})
+}
+
+func TestServiceCheckFailEarly(t *testing.T) {
+
+	config.Config.ApiBaseUrl = "http://integration-test.invalid/api"
+
+	prepareRequest := func(cfg map[string]any) action_kit_api.PrepareActionRequestBody {
+		return extutil.JsonMangle(action_kit_api.PrepareActionRequestBody{
+			Config: cfg,
+			Target: &action_kit_api.Target{
+				Attributes: map[string][]string{
+					"stackstate.service.id": {"123"},
+					"k8s.service.name":      {"test"},
+					"k8s.cluster-name":      {"test-cluster"},
+				},
+			},
+			ExecutionContext: extutil.Ptr(action_kit_api.ExecutionContext{
+				ExperimentUri: extutil.Ptr("<uri-to-experiment>"),
+				ExecutionUri:  extutil.Ptr("<uri-to-execution>"),
+			}),
+		})
+	}
+
+	t.Run("Describe declares failEarly as advanced with default true", func(t *testing.T) {
+		description := action.Describe()
+		var failEarly *action_kit_api.ActionParameter
+		for _, p := range description.Parameters {
+			if p.Name == "failEarly" {
+				failEarly = &p
+				break
+			}
+		}
+		require.NotNil(t, failEarly)
+		require.Equal(t, action_kit_api.ActionParameterTypeBoolean, failEarly.Type)
+		require.Equal(t, "true", *failEarly.DefaultValue)
+		require.True(t, *failEarly.Advanced)
+	})
+
+	t.Run("Prepare defaults failEarly to true when parameter is absent (non-breaking)", func(t *testing.T) {
+		state := action.NewEmptyState()
+		_, err := action.Prepare(context.TODO(), &state, prepareRequest(map[string]any{
+			"duration":        1000 * 60,
+			"expectedStatus":  "CLEAR",
+			"statusCheckMode": statusCheckModeAllTheTime,
+		}))
+		require.NoError(t, err)
+		require.True(t, state.FailEarly)
+	})
+
+	t.Run("Prepare extracts failEarly false", func(t *testing.T) {
+		state := action.NewEmptyState()
+		_, err := action.Prepare(context.TODO(), &state, prepareRequest(map[string]any{
+			"duration":        1000 * 60,
+			"expectedStatus":  "CLEAR",
+			"statusCheckMode": statusCheckModeAllTheTime,
+			"failEarly":       false,
+		}))
+		require.NoError(t, err)
+		require.False(t, state.FailEarly)
+	})
+
+	t.Run("allTheTime fail at end reports deviation even after recovery", func(t *testing.T) {
+		state := serviceCheckState(statusCheckModeAllTheTime)
+		state.FailEarly = false
+		mockedApi := new(getSnapshotApiMock)
+		mockedApi.On("GetServiceSnapshot", mock.Anything, mock.Anything).Return(apiResponseWithStatus(200), serviceResponseWithState("DEVIATING"), nil)
+
+		// Deviation observed mid-run: no early failure, metric still emitted.
+		status, err := MonitorStatusCheckStatus(context.TODO(), &state, mockedApi)
+		require.NoError(t, err)
+		require.False(t, status.Completed)
+		require.Nil(t, status.Error)
+		require.Equal(t, "warn", (*status.Metrics)[0].Metric["state"])
+
+		// Service recovers before the end of the step.
+		mockedApi.On("GetServiceSnapshot", mock.Anything, mock.Anything).Unset()
+		mockedApi.On("GetServiceSnapshot", mock.Anything, mock.Anything).Return(apiResponseWithStatus(200), serviceResponseWithState("CLEAR"), nil)
+
+		status, err = MonitorStatusCheckStatus(context.TODO(), &state, mockedApi)
+		require.NoError(t, err)
+		require.False(t, status.Completed)
+		require.Nil(t, status.Error)
+		require.Equal(t, "success", (*status.Metrics)[0].Metric["state"])
+
+		// Time is up: the past deviation is still reported.
+		state.End = time.Now().Add(-1 * time.Hour)
+		status, err = MonitorStatusCheckStatus(context.TODO(), &state, mockedApi)
+		require.NoError(t, err)
+		require.True(t, status.Completed)
+		require.NotNil(t, status.Error)
+		require.Contains(t, status.Error.Title, "had status 'DEVIATING'")
+	})
+
+	t.Run("allTheTime fail at end passes without deviation", func(t *testing.T) {
+		state := serviceCheckState(statusCheckModeAllTheTime)
+		state.FailEarly = false
+		mockedApi := new(getSnapshotApiMock)
+		mockedApi.On("GetServiceSnapshot", mock.Anything, mock.Anything).Return(apiResponseWithStatus(200), serviceResponseWithState("CLEAR"), nil)
+
+		status, err := MonitorStatusCheckStatus(context.TODO(), &state, mockedApi)
+		require.NoError(t, err)
+		require.False(t, status.Completed)
+		require.Nil(t, status.Error)
+
+		state.End = time.Now().Add(-1 * time.Hour)
+		status, err = MonitorStatusCheckStatus(context.TODO(), &state, mockedApi)
+		require.NoError(t, err)
+		require.True(t, status.Completed)
+		require.Nil(t, status.Error)
+	})
+
+	for _, failEarly := range []bool{true, false} {
+		t.Run(fmt.Sprintf("atLeastOnce never fails early regardless of failEarly=%v", failEarly), func(t *testing.T) {
+			state := serviceCheckState(statusCheckModeAtLeastOnce)
+			state.FailEarly = failEarly
+			mockedApi := new(getSnapshotApiMock)
+			mockedApi.On("GetServiceSnapshot", mock.Anything, mock.Anything).Return(apiResponseWithStatus(200), serviceResponseWithState("DEVIATING"), nil)
+
+			// Deviating mid-run: must never fail early - the expected status may still appear later.
+			status, err := MonitorStatusCheckStatus(context.TODO(), &state, mockedApi)
+			require.NoError(t, err)
+			require.False(t, status.Completed)
+			require.Nil(t, status.Error)
+
+			// Expected status appears later: the check succeeds at the end.
+			mockedApi.On("GetServiceSnapshot", mock.Anything, mock.Anything).Unset()
+			mockedApi.On("GetServiceSnapshot", mock.Anything, mock.Anything).Return(apiResponseWithStatus(200), serviceResponseWithState("CLEAR"), nil)
+
+			status, err = MonitorStatusCheckStatus(context.TODO(), &state, mockedApi)
+			require.NoError(t, err)
+			require.Nil(t, status.Error)
+
+			state.End = time.Now().Add(-1 * time.Hour)
+			status, err = MonitorStatusCheckStatus(context.TODO(), &state, mockedApi)
+			require.NoError(t, err)
+			require.True(t, status.Completed)
+			require.Nil(t, status.Error)
+		})
+	}
 }
 
 func serviceCheckState(mode string) ServiceStatusCheckState {
