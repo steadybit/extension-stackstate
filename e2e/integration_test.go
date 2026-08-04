@@ -96,19 +96,20 @@ func serviceCheckTarget() *action_kit_api.Target {
 	}
 }
 
-func runServiceCheck(t *testing.T, e *e2e.Extension, config serviceCheckConfig) (error, time.Duration) {
+func runServiceCheck(t *testing.T, e *e2e.Extension, config serviceCheckConfig) (time.Duration, error) {
 	t.Helper()
 	start := time.Now()
 	action, err := e.RunAction("com.steadybit.extension_stackstate.service.check", serviceCheckTarget(), config, &action_kit_api.ExecutionContext{})
 	require.NoError(t, err)
 	defer func() { _ = action.Cancel() }()
-	return action.Wait(), time.Since(start)
+	err = action.Wait()
+	return time.Since(start), err
 }
 
 func testServiceCheck(server *mockServer, status, expectedStatus string, wantedActionStatus action_kit_api.ActionKitErrorStatus) func(t *testing.T, minikube *e2e.Minikube, e *e2e.Extension) {
 	return func(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 		server.setState(status)
-		err, _ := runServiceCheck(t, e, serviceCheckConfig{Duration: 5_000, ExpectedStatus: expectedStatus})
+		_, err := runServiceCheck(t, e, serviceCheckConfig{Duration: 5_000, ExpectedStatus: expectedStatus})
 		if wantedActionStatus == "" {
 			require.NoError(t, err)
 		} else {
@@ -121,7 +122,7 @@ func testServiceCheckFailsEarlyByDefault(server *mockServer) func(t *testing.T, 
 	return func(t *testing.T, _ *e2e.Minikube, e *e2e.Extension) {
 		server.setState("DEVIATING")
 
-		err, elapsed := runServiceCheck(t, e, serviceCheckConfig{Duration: 10_000, ExpectedStatus: "CLEAR"})
+		elapsed, err := runServiceCheck(t, e, serviceCheckConfig{Duration: 10_000, ExpectedStatus: "CLEAR"})
 
 		require.ErrorContains(t, err, "has status 'DEVIATING'")
 		require.Less(t, elapsed, 8*time.Second, "check with failEarly unset must fail on the first deviating status, well before the step duration")
@@ -136,7 +137,7 @@ func testServiceCheckFailEarlyDisabledFailsAtEnd(server *mockServer) func(t *tes
 		defer timer.Stop()
 
 		failEarly := false
-		err, elapsed := runServiceCheck(t, e, serviceCheckConfig{Duration: 6_000, ExpectedStatus: "CLEAR", FailEarly: &failEarly})
+		elapsed, err := runServiceCheck(t, e, serviceCheckConfig{Duration: 6_000, ExpectedStatus: "CLEAR", FailEarly: &failEarly})
 
 		require.ErrorContains(t, err, "had status 'DEVIATING'")
 		require.GreaterOrEqual(t, elapsed, 6*time.Second, "check with failEarly disabled must run for the whole step duration")
@@ -151,7 +152,7 @@ func testServiceCheckAtLeastOnceIgnoresFailEarly(server *mockServer) func(t *tes
 		defer timer.Stop()
 
 		failEarly := true
-		err, _ := runServiceCheck(t, e, serviceCheckConfig{Duration: 6_000, ExpectedStatus: "CLEAR", StatusCheckMode: "atLeastOnce", FailEarly: &failEarly})
+		_, err := runServiceCheck(t, e, serviceCheckConfig{Duration: 6_000, ExpectedStatus: "CLEAR", StatusCheckMode: "atLeastOnce", FailEarly: &failEarly})
 
 		require.NoError(t, err)
 	}
