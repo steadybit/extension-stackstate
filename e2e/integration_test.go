@@ -100,8 +100,12 @@ func runServiceCheck(t *testing.T, e *e2e.Extension, config serviceCheckConfig) 
 	t.Helper()
 	start := time.Now()
 	action, err := e.RunAction("com.steadybit.extension_stackstate.service.check", serviceCheckTarget(), config, &action_kit_api.ExecutionContext{})
-	require.NoError(t, err)
 	defer func() { _ = action.Cancel() }()
+	// A deviating state present from the very beginning now fails at RunAction() itself, since
+	// Start() runs the check immediately, rather than only showing up once Status() starts polling.
+	if err != nil {
+		return time.Since(start), err
+	}
 	err = action.Wait()
 	return time.Since(start), err
 }

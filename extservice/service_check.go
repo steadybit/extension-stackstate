@@ -210,8 +210,17 @@ func (m *ServiceStatusCheckAction) Prepare(_ context.Context, state *ServiceStat
 	return nil, nil
 }
 
-func (m *ServiceStatusCheckAction) Start(_ context.Context, _ *ServiceStatusCheckState) (*action_kit_api.StartResult, error) {
-	return nil, nil
+func (m *ServiceStatusCheckAction) Start(ctx context.Context, state *ServiceStatusCheckState) (*action_kit_api.StartResult, error) {
+	statusResult, err := MonitorStatusCheckStatus(ctx, state, Client)
+	if statusResult == nil {
+		return nil, err
+	}
+	return &action_kit_api.StartResult{
+		Artifacts: statusResult.Artifacts,
+		Error:     statusResult.Error,
+		Messages:  statusResult.Messages,
+		Metrics:   statusResult.Metrics,
+	}, err
 }
 
 func (m *ServiceStatusCheckAction) Status(ctx context.Context, state *ServiceStatusCheckState) (*action_kit_api.StatusResult, error) {
