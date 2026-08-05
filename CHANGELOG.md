@@ -1,8 +1,16 @@
 # Changelog
 
-## Unreleased
+## v1.0.29
 
 - Add a "Fail early" option to the service status check. When enabled (the default, matching the previous behavior), the "All the time" mode fails as soon as a deviating status is observed. When disabled, the check keeps collecting events for the whole duration and only fails at the end of the step (with a past-tense message, since the status may have recovered by then). Only affects the "All the time" mode.
+- chore(deps): bump go to 1.26.5 (#150)
+- chore(deps): update dependencies
+- feat(service check): add fail early option (#149)
+- feat: support filtering targets out of discovery
+- fix(e2e): return the error as the last argument in runServiceCheck (ST1008)
+- fix: emit the service status metric immediately on Start (#152)
+- refactor: register extension index via exthttp.RegisterRevisionedHandler (#151)
+- test(service check): cover the fail early option in unit and e2e tests
 
 ## v1.0.28
 
