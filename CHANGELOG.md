@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.30
+
+- chore(deps): bump steadybit kits and drop Go patch pin (#153)
+
 ## v1.0.29
 
 - Add a "Fail early" option to the service status check. When enabled (the default, matching the previous behavior), the "All the time" mode fails as soon as a deviating status is observed. When disabled, the check keeps collecting events for the whole duration and only fails at the end of the step (with a past-tense message, since the status may have recovered by then). Only affects the "All the time" mode.
