@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.31
+
+- chore(deps): bump github.com/steadybit/action-kit/go/action_kit_test
+- chore(deps): bump github.com/steadybit/discovery-kit/go/discovery_kit_test
+- chore(deps): bump github.com/stretchr/testify from 1.11.1 to 1.12.1
+- chore(deps): bump golang from 1.26-alpine to 1.27-alpine
+
 ## v1.0.30
 
 - chore(deps): bump steadybit kits and drop Go patch pin (#153)
