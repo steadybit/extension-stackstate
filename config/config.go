@@ -7,6 +7,7 @@ package config
 import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog/log"
+	"strings"
 )
 
 // Specification is the configuration specification for the extension. Configuration values can be applied
@@ -30,5 +31,13 @@ func ParseConfiguration() {
 }
 
 func ValidateConfiguration() {
-	// You may optionally validate the configuration here.
+	// envconfig's `required:"true"` only checks that the variable is *set*: an empty
+	// value satisfies it, so the extension would start with a blank configuration and
+	// fail much later against the target system. Reject blank values here instead.
+	if strings.TrimSpace(Config.ServiceToken) == "" {
+		log.Fatal().Msg("STEADYBIT_EXTENSION_SERVICE_TOKEN must not be empty.")
+	}
+	if strings.TrimSpace(Config.ApiBaseUrl) == "" {
+		log.Fatal().Msg("STEADYBIT_EXTENSION_API_BASE_URL must not be empty.")
+	}
 }
