@@ -36,6 +36,7 @@ func TestWithMinikube(t *testing.T) {
 		ExtraArgs: func(m *e2e.Minikube) []string {
 			return []string{
 				"--set", fmt.Sprintf("stackstate.apiBaseUrl=http://host.minikube.internal:%s", port),
+				"--set", "stackstate.serviceToken=service-token-123",
 				"--set", "logging.level=trace",
 			}
 		},
