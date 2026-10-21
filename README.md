@@ -20,6 +20,7 @@ You need to have a StackState service token. The following steps describe how to
 | `STEADYBIT_EXTENSION_SERVICE_TOKEN`                         | `stackstate.serviceToken`               | Stack State Service Token                                                                                               | yes      |         |
 | `STEADYBIT_EXTENSION_API_BASE_URL`                          | `stackstate.apiBaseUrl`                 | Stack State API Base URL (example: https://yourcompany.app.stackstate.io/api)                                           | yes      |         |
 | `STEADYBIT_EXTENSION_DISCOVERY_ATTRIBUTES_EXCLUDES_SERVICE` | `discovery.attributes.excludes.service` | List of Service Attributes which will be excluded during discovery. Checked by key equality and supporting trailing "*" | no       |         |
+| `STEADYBIT_EXTENSION_INSECURE_SKIP_VERIFY`                  | `stackstate.insecureSkipVerify`         | Skip TLS certificate verification when connecting to StackState. See [Importing your own certificates](#importing-your-own-certificates). | no       | `false` |
 
 
 Beyond the settings above, this extension supports the configuration common to all Steadybit
@@ -31,6 +32,44 @@ extensions:
   stop the extension reporting targets you do not want.
 - [Group Matching](https://github.com/steadybit/discovery-kit/blob/main/docs/target-enrichment.md#group-matching) —
   tag discovered targets with a group, so enrichment rules only match within it.
+
+## Importing your own certificates
+
+If your StackState is served with a self-signed certificate, or one issued by a private CA, either trust the CA
+(recommended) or skip certificate verification.
+
+### Option 1: Mounting custom certificates
+
+Store the CA certificate (`*.crt`) in a config map:
+
+```shell
+kubectl create configmap -n steadybit-agent stackstate-self-signed-ca --from-file=./self-signed-ca.crt
+```
+
+Then mount it and add it to the trusted certificate directories:
+
+```yaml
+extraVolumeMounts:
+  - name: extra-certs
+    mountPath: /etc/ssl/extra-certs
+    readOnly: true
+extraVolumes:
+  - name: extra-certs
+    configMap:
+      name: stackstate-self-signed-ca
+extraEnv:
+  - name: SSL_CERT_DIR
+    value: /etc/ssl/extra-certs:/etc/ssl/certs
+```
+
+### Option 2: Skipping certificate verification
+
+Disables TLS certificate verification. Suitable for testing, not recommended for production.
+
+```yaml
+stackstate:
+  insecureSkipVerify: true
+```
 
 ## Installation
 

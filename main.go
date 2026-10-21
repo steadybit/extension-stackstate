@@ -19,6 +19,7 @@ import (
 	"github.com/steadybit/extension-kit/extotel"
 	"github.com/steadybit/extension-kit/extruntime"
 	"github.com/steadybit/extension-kit/extsignals"
+	"github.com/steadybit/extension-kit/exttls"
 	"github.com/steadybit/extension-stackstate/config"
 	"github.com/steadybit/extension-stackstate/extservice"
 )
@@ -60,6 +61,7 @@ func main() {
 
 func initStackStateHttpClient() {
 	client := resty.New()
+	client.SetTransport(exttls.Transport())
 	client.SetBaseURL(config.Config.ApiBaseUrl)
 	client.SetHeader("X-API-Key", config.Config.ServiceToken)
 	client.SetHeader("Content-Type", "application/json")
