@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.37
+
+- chore(deps): bump action_kit_test to v1.4.13 (#163)
+- chore(deps): bump github.com/KimMachineGun/automemlimit
+- feat: support StackState with self-signed certificates (#162)
+
 ## v1.0.36
 
 - chore(deps): bump golang.org/x/net to v0.61.0
