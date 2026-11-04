@@ -283,7 +283,7 @@ func TestServiceCheckFailEarly(t *testing.T) {
 		})
 	}
 
-	t.Run("Describe declares failEarly as advanced with default true", func(t *testing.T) {
+	t.Run("Describe shows failEarly directly with default true", func(t *testing.T) {
 		description := action.Describe()
 		var failEarly *action_kit_api.ActionParameter
 		for _, p := range description.Parameters {
@@ -295,7 +295,8 @@ func TestServiceCheckFailEarly(t *testing.T) {
 		require.NotNil(t, failEarly)
 		require.Equal(t, action_kit_api.ActionParameterTypeBoolean, failEarly.Type)
 		require.Equal(t, "true", *failEarly.DefaultValue)
-		require.True(t, *failEarly.Advanced)
+		require.Nil(t, failEarly.Advanced)
+		require.Nil(t, failEarly.Group)
 	})
 
 	t.Run("Prepare defaults failEarly to true when parameter is absent (non-breaking)", func(t *testing.T) {
