@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- feat: the StackState Service check shows Fail early with the other check settings
+
 ## v1.0.37
 
 - chore(deps): bump action_kit_test to v1.4.13 (#163)
